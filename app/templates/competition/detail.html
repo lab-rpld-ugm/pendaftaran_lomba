@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}{{ competition.nama_kompetisi }} - Sistem Manajemen Kompetisi PDC 2025{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Beranda</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('competition.index') }}">Kompetisi</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ competition.nama_kompetisi }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Competition Header -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="badge 
+                                {% if competition.kategori == 'individual' %}bg-primary
+                                {% else %}bg-success{% endif %} mb-2">
+                                <i class="fas 
+                                    {% if competition.kategori == 'individual' %}fa-user
+                                    {% else %}fa-users{% endif %} me-1"></i>
+                                {{ competition.get_category_display() }}
+                            </span>
+                            <span class="badge 
+                                {% if competition.jenis == 'academic' %}bg-info
+                                {% elif competition.jenis == 'creative' %}bg-warning
+                                {% elif competition.jenis == 'performance' %}bg-danger
+                                {% else %}bg-dark{% endif %} ms-2">
+                                {{ competition.get_competition_type_display() }}
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="fas fa-users me-2"></i>
+                                <span class="fw-bold text-primary">{{ competition.get_participant_count() }}</span>
+                                <span class="ms-1">peserta terdaftar</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h1 class="h2 mb-3">{{ competition.nama_kompetisi }}</h1>
+                    <p class="lead text-muted">{{ competition.deskripsi }}</p>
+                </div>
+            </div>
+
+            <!-- Competition Details -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informasi Kompetisi
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="icon-circle bg-primary bg-opacity-10 me-3">
+                                    <i class="fas fa-calendar-alt text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Tanggal Kompetisi</h6>
+                                    <p class="text-muted mb-0">{{ competition.tanggal_kompetisi.strftime('%A, %d %B %Y') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="icon-circle bg-warning bg-opacity-10 me-3">
+                                    <i class="fas fa-clock text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Deadline Registrasi</h6>
+                                    <p class="text-muted mb-0">{{ competition.deadline_registrasi.strftime('%A, %d %B %Y') }}</p>
+                                    {% if competition.get_registration_days_left() > 0 %}
+                                        <small class="text-success">{{ competition.get_registration_days_left() }} hari lagi</small>
+                                    {% else %}
+                                        <small class="text-danger">Pendaftaran ditutup</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="icon-circle bg-success bg-opacity-10 me-3">
+                                    <i class="fas fa-graduation-cap text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Persyaratan Kelas</h6>
+                                    <p class="text-muted mb-0">Kelas {{ competition.min_kelas }} - {{ competition.max_kelas }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% if competition.kategori == 'team' %}
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="icon-circle bg-info bg-opacity-10 me-3">
+                                        <i class="fas fa-users text-info"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Jumlah Anggota Tim</h6>
+                                        <p class="text-muted mb-0">{{ competition.min_anggota }} - {{ competition.max_anggota }} orang</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Status -->
+            {% if current_user.is_authenticated %}
+                {% if user_eligible %}
+                    <div class="alert alert-success" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle me-3 fa-2x"></i>
+                            <div class="flex-grow-1">
+                                <h5 class="alert-heading mb-1">Siap Mendaftar!</h5>
+                                <p class="mb-0">Anda memenuhi semua persyaratan untuk kompetisi ini.</p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Harga saat ini: </strong>
+                                <span class="h5 text-success">Rp {{ "{:,}".format(competition.get_current_price()) }}
+                                </span>
+                                {% if competition.is_early_bird_active() %}
+                                    <span class="badge bg-warning text-dark ms-2">Early Bird</span>
+                                {% endif %}
+                            </div>
+                            {% if competition.kategori == 'individual' %}
+                                <a href="{{ url_for('competition.register', id=competition.id) }}" class="btn btn-success btn-lg">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    Daftar Sekarang
+                                </a>
+                            {% elif competition.kategori == 'team' %}
+                                <a href="{{ url_for('team.create_team', competition_id=competition.id) }}" class="btn btn-success btn-lg">
+                                    <i class="fas fa-users me-2"></i>
+                                    Buat Tim
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>
+                            <div class="flex-grow-1">
+                                <h5 class="alert-heading mb-1">Tidak Dapat Mendaftar</h5>
+                                <p class="mb-0">{{ eligibility_reason }}</p>
+                            </div>
+                        </div>
+                        {% if eligibility_reason in ['Profil belum dibuat', 'Profil belum lengkap'] %}
+                            <hr>
+                            <a href="{{ url_for('main.profil') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>
+                                Lengkapi Profil
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle me-3 fa-2x"></i>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading mb-1">Login Diperlukan</h5>
+                            <p class="mb-0">Silakan login untuk mendaftar kompetisi ini.</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Harga saat ini: </strong>
+                            <span class="h5 text-primary">Rp {{ "{:,}".format(competition.get_current_price()) }}</span>
+                            {% if competition.is_early_bird_active() %}
+                                <span class="badge bg-warning text-dark ms-2">Early Bird</span>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('auth.masuk', next=request.path) }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Login
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Pricing Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-tag me-2"></i>
+                        Informasi Harga
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if competition.is_early_bird_active() %}
+                        <div class="alert alert-warning py-2 mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-fire text-warning me-1"></i>
+                                    <strong>Early Bird Aktif!</strong>
+                                </div>
+                                <small class="text-muted">{{ competition.get_early_bird_days_left() }} hari lagi</small>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <div class="h2 text-success mb-0">Rp {{ "{:,}".format(competition.harga_early_bird) }}</div>
+                            <small class="text-muted text-decoration-line-through">Rp {{ "{:,}".format(competition.harga_reguler) }}</small>
+                        </div>
+                        
+                        <div class="alert alert-success py-2 text-center">
+                            <strong>Hemat Rp {{ "{:,}".format(competition.get_early_bird_savings()) }}</strong>
+                        </div>
+                        
+                        <div class="text-center">
+                            <small class="text-muted">
+                                Early bird berakhir: {{ competition.tanggal_akhir_early_bird.strftime('%d %B %Y') }}
+                            </small>
+                        </div>
+                    {% else %}
+                        <div class="text-center mb-3">
+                            <div class="h2 text-primary mb-0">Rp {{ "{:,}".format(competition.harga_reguler) }}</div>
+                            <small class="text-muted">Harga reguler</small>
+                        </div>
+                        
+                        {% if competition.get_early_bird_days_left() == 0 and competition.is_registration_open() %}
+                            <div class="alert alert-info py-2 text-center">
+                                <small>Periode early bird telah berakhir</small>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Profile Status (if logged in) -->
+            {% if current_user.is_authenticated %}
+                {% set status_info = ProfileVerificationHelper.get_profile_status_info(current_user) %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-user-check me-2"></i>
+                            Status Profil Anda
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <span class="badge {{ ProfileVerificationHelper.get_verification_badge_class(current_user) }} fs-6">
+                                <i class="{{ ProfileVerificationHelper.get_verification_icon(current_user) }} me-1"></i>
+                                {{ status_info.message }}
+                            </span>
+                        </div>
+                        
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar 
+                                {% if status_info.completion_percentage == 100 %}bg-success
+                                {% elif status_info.completion_percentage >= 50 %}bg-warning
+                                {% else %}bg-danger{% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ status_info.completion_percentage }}%">
+                            </div>
+                        </div>
+                        <div class="text-center mb-3">
+                            <small class="text-muted">{{ status_info.completion_percentage }}% lengkap</small>
+                        </div>
+                        
+                        {% if status_info.status in ['no_profile', 'incomplete'] %}
+                            <div class="d-grid">
+                                <a href="{{ url_for('main.profil') }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Lengkapi Profil
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Aksi Cepat
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('competition.index') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Kembali ke Daftar Kompetisi
+                        </a>
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-tachometer-alt me-1"></i>
+                                Dashboard
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-heading {
+    color: inherit;
+}
+
+@media (max-width: 768px) {
+    .btn-lg {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+}
+</style>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}

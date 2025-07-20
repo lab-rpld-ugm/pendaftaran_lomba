@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Edit Kompetisi - Admin{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Edit Kompetisi: {{ competition.nama_kompetisi }}</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.nama_kompetisi.label(class="form-label") }}
+            {{ form.nama_kompetisi(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.deskripsi.label(class="form-label") }}
+            {{ form.deskripsi(class="form-control", rows=4) }}
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.kategori.label(class="form-label") }}
+                {{ form.kategori(class="form-select") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.jenis.label(class="form-label") }}
+                {{ form.jenis(class="form-select") }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.harga_early_bird.label(class="form-label") }}
+                {{ form.harga_early_bird(class="form-control") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.harga_reguler.label(class="form-label") }}
+                {{ form.harga_reguler(class="form-control") }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.tanggal_mulai_early_bird.label(class="form-label") }}
+                {{ form.tanggal_mulai_early_bird(class="form-control") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.tanggal_akhir_early_bird.label(class="form-label") }}
+                {{ form.tanggal_akhir_early_bird(class="form-control") }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.deadline_registrasi.label(class="form-label") }}
+                {{ form.deadline_registrasi(class="form-control") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.tanggal_kompetisi.label(class="form-label") }}
+                {{ form.tanggal_kompetisi(class="form-control") }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.min_kelas.label(class="form-label") }}
+                {{ form.min_kelas(class="form-control") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.max_kelas.label(class="form-label") }}
+                {{ form.max_kelas(class="form-control") }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.min_anggota.label(class="form-label") }}
+                {{ form.min_anggota(class="form-control") }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.max_anggota.label(class="form-label") }}
+                {{ form.max_anggota(class="form-control") }}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">Simpan Perubahan</button>
+        <a href="{{ url_for('admin.list_competitions') }}" class="btn btn-secondary ms-2">Batal</a>
+    </form>
+</div>
+{% endblock %} 

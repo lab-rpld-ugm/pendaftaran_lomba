@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Kelola Kompetisi - Admin{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Daftar Kompetisi</h2>
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Nama Kompetisi</th>
+                <th>Kategori</th>
+                <th>Jenis</th>
+                <th>Tanggal Kompetisi</th>
+                <th>Deadline Registrasi</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for competition in competitions %}
+            <tr>
+                <td>{{ competition.nama_kompetisi }}</td>
+                <td>{{ competition.get_category_display() }}</td>
+                <td>{{ competition.get_competition_type_display() }}</td>
+                <td>{{ competition.tanggal_kompetisi.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ competition.deadline_registrasi.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>
+                    <a href="{{ url_for('admin.edit_competition', id=competition.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 

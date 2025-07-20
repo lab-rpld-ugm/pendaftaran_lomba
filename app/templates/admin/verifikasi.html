@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+
+{% block title %}Verifikasi Pengguna - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Verifikasi Pengguna</h1>
+            <p class="text-muted">Kelola verifikasi profil pengguna</p>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Verifikasi</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.total_users }}</h4>
+                            <p class="card-text">Total Pengguna</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.verified_users }}</h4>
+                            <p class="card-text">Terverifikasi</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.complete_profiles }}</h4>
+                            <p class="card-text">Profil Lengkap</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.pending_verification }}</h4>
+                            <p class="card-text">Menunggu Verifikasi</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Filter Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Semua Status</option>
+                        <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Terverifikasi</option>
+                        <option value="unverified" {% if status_filter == 'unverified' %}selected{% endif %}>Belum Terverifikasi</option>
+                        <option value="complete" {% if status_filter == 'complete' %}selected{% endif %}>Profil Lengkap</option>
+                        <option value="incomplete" {% if status_filter == 'incomplete' %}selected{% endif %}>Profil Belum Lengkap</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Cari Pengguna</label>
+                    <input type="text" name="search" id="search" class="form-control" 
+                           placeholder="Cari berdasarkan email, nama, atau sekolah..." 
+                           value="{{ search_query }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary d-block w-100">
+                        <i class="fas fa-search"></i> Cari
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="bulkActionForm" method="POST" action="{{ url_for('admin.bulk_verification_action') }}">
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label for="bulkAction" class="form-label">Aksi Massal</label>
+                        <select name="action" id="bulkAction" class="form-select">
+                            <option value="">Pilih Aksi</option>
+                            <option value="approve">Verifikasi Terpilih</option>
+                            <option value="reject">Tolak Verifikasi Terpilih</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-warning" id="bulkActionBtn" disabled>
+                            <i class="fas fa-tasks"></i> Jalankan Aksi
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="selectAllBtn">
+                            <i class="fas fa-check-square"></i> Pilih Semua
+                        </button>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span id="selectedCount" class="text-muted">0 pengguna dipilih</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Cards -->
+    <div class="row" id="userCards">
+        {% for user in users %}
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="card h-100 user-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input user-checkbox" type="checkbox" 
+                               value="{{ user.id }}" name="user_ids" form="bulkActionForm">
+                    </div>
+                    <div class="text-end">
+                        {% if user.profile.is_verified %}
+                            <span class="badge bg-success">Terverifikasi</span>
+                        {% elif user.profile.verification_progress == 100 %}
+                            <span class="badge bg-warning">Menunggu Verifikasi</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Profil Belum Lengkap</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- User Info -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                             style="width: 50px; height: 50px; font-size: 1.2rem;">
+                            {{ user.profile.get_display_name()[:1].upper() if user.profile.get_display_name() else 'U' }}
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-1">{{ user.profile.get_display_name() }}</h6>
+                            <p class="text-muted small mb-0">{{ user.email }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Profile Progress -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Kelengkapan Profil</small>
+                            <small class="text-muted">{{ user.profile.verification_progress }}%</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar 
+                                {% if user.profile.verification_progress == 100 %}bg-success
+                                {% elif user.profile.verification_progress >= 75 %}bg-info
+                                {% elif user.profile.verification_progress >= 50 %}bg-warning
+                                {% else %}bg-danger{% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ user.profile.verification_progress }}%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Details -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Sekolah</small>
+                            <small>{{ user.profile.sekolah or '-' }}</small>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Kelas</small>
+                            <small>{{ user.profile.kelas or '-' }}</small>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">NISN</small>
+                            <small>{{ user.profile.nisn or '-' }}</small>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">WhatsApp</small>
+                            <small>{{ user.profile.whatsapp or '-' }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Social Media -->
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1">Media Sosial</small>
+                        <div class="d-flex gap-2">
+                            {% if user.profile.instagram %}
+                                <a href="https://instagram.com/{{ user.profile.instagram }}" target="_blank" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                            {% endif %}
+                            {% if user.profile.twitter %}
+                                <a href="https://twitter.com/{{ user.profile.twitter }}" target="_blank" 
+                                   class="btn btn-sm btn-outline-info">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                            {% endif %}
+                            {% if not user.profile.instagram and not user.profile.twitter %}
+                                <small class="text-muted">Belum diisi</small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Documents -->
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-2">Dokumen</small>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                {% if user.profile.foto_kartu_pelajar %}
+                                    <button type="button" class="btn btn-sm btn-outline-success w-100" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#documentModal"
+                                            data-document-url="{{ url_for('main.uploaded_file', subfolder='profile_photos', filename=user.profile.foto_kartu_pelajar) }}"
+                                            data-document-title="Kartu Pelajar - {{ user.profile.get_display_name() }}">
+                                        <i class="fas fa-id-card"></i> Kartu Pelajar
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline-secondary w-100" disabled>
+                                        <i class="fas fa-id-card"></i> Belum Upload
+                                    </button>
+                                {% endif %}
+                            </div>
+                            <div class="col-6">
+                                {% if user.profile.screenshot_twibbon %}
+                                    <button type="button" class="btn btn-sm btn-outline-success w-100" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#documentModal"
+                                            data-document-url="{{ url_for('main.uploaded_file', subfolder='twibbon_screenshots', filename=user.profile.screenshot_twibbon) }}"
+                                            data-document-title="Twibbon - {{ user.profile.get_display_name() }}">
+                                        <i class="fas fa-image"></i> Twibbon
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline-secondary w-100" disabled>
+                                        <i class="fas fa-image"></i> Belum Upload
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Missing Fields -->
+                    {% if user.profile.verification_progress < 100 %}
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1">Field yang Belum Lengkap</small>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for field in user.profile.get_missing_fields() %}
+                                <span class="badge bg-light text-dark">{{ field }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card-footer">
+                    <div class="d-flex gap-2">
+                        {% if user.profile.verification_progress == 100 and not user.profile.is_verified %}
+                            <form method="POST" action="{{ url_for('admin.approve_user', user_id=user.id) }}" class="flex-fill">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-success btn-sm w-100" 
+                                        onclick="return confirm('Verifikasi pengguna ini?')">
+                                    <i class="fas fa-check"></i> Verifikasi
+                                </button>
+                            </form>
+                        {% endif %}
+                        
+                        {% if user.profile.is_verified %}
+                            <form method="POST" action="{{ url_for('admin.reject_user', user_id=user.id) }}" class="flex-fill">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-warning btn-sm w-100" 
+                                        onclick="return confirm('Tolak verifikasi pengguna ini?')">
+                                    <i class="fas fa-times"></i> Tolak Verifikasi
+                                </button>
+                            </form>
+                        {% endif %}
+                        
+                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#details{{ user.id }}">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Collapsible Details -->
+                    <div class="collapse mt-3" id="details{{ user.id }}">
+                        <div class="border-top pt-3">
+                            <small class="text-muted d-block">Terdaftar: {{ user.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                            {% if user.profile.updated_at %}
+                                <small class="text-muted d-block">Update Terakhir: {{ user.profile.updated_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Empty State -->
+    {% if not users %}
+    <div class="text-center py-5">
+        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Tidak ada pengguna ditemukan</h5>
+        <p class="text-muted">Coba ubah filter atau kata kunci pencarian</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Document Modal -->
+<div class="modal fade" id="documentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="documentModalTitle">Dokumen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="documentImage" src="" alt="Dokumen" class="img-fluid" style="max-height: 70vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle bulk actions
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    const bulkActionBtn = document.getElementById('bulkActionBtn');
+    const selectedCount = document.getElementById('selectedCount');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const bulkActionSelect = document.getElementById('bulkAction');
+    
+    function updateBulkActionState() {
+        const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+        const count = checkedBoxes.length;
+        
+        selectedCount.textContent = `${count} pengguna dipilih`;
+        bulkActionBtn.disabled = count === 0 || !bulkActionSelect.value;
+    }
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkActionState);
+    });
+    
+    bulkActionSelect.addEventListener('change', updateBulkActionState);
+    
+    selectAllBtn.addEventListener('click', function() {
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !allChecked;
+        });
+        updateBulkActionState();
+        
+        this.innerHTML = allChecked ? 
+            '<i class="fas fa-check-square"></i> Pilih Semua' : 
+            '<i class="fas fa-square"></i> Batal Pilih';
+    });
+    
+    // Handle document modal
+    const documentModal = document.getElementById('documentModal');
+    documentModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const documentUrl = button.getAttribute('data-document-url');
+        const documentTitle = button.getAttribute('data-document-title');
+        
+        document.getElementById('documentModalTitle').textContent = documentTitle;
+        document.getElementById('documentImage').src = documentUrl;
+    });
+    
+    // Handle bulk action form submission
+    document.getElementById('bulkActionForm').addEventListener('submit', function(e) {
+        const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+        const action = bulkActionSelect.value;
+        
+        if (checkedBoxes.length === 0) {
+            e.preventDefault();
+            alert('Pilih minimal satu pengguna untuk diproses.');
+            return;
+        }
+        
+        if (!action) {
+            e.preventDefault();
+            alert('Pilih aksi yang akan dilakukan.');
+            return;
+        }
+        
+        const actionText = action === 'approve' ? 'verifikasi' : 'tolak verifikasi';
+        if (!confirm(`${actionText.charAt(0).toUpperCase() + actionText.slice(1)} ${checkedBoxes.length} pengguna terpilih?`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

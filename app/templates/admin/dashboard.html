@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Sistem Manajemen Kompetisi PDC 2025{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Admin Dashboard</h1>
+            <p class="text-muted">Panel administrasi sistem kompetisi PDC 2025</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card h-100 mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-check fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Verifikasi Pengguna</h5>
+                    <p class="card-text">Kelola verifikasi profil pengguna dan dokumen yang diupload.</p>
+                    <a href="{{ url_for('admin.verifikasi') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-arrow-right"></i> Kelola Verifikasi
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-credit-card fa-3x text-success"></i>
+                    </div>
+                    <h5 class="card-title">Pembayaran</h5>
+                    <p class="card-text">Review dan approve bukti pembayaran dari peserta</p>
+                    <a href="{{ url_for('admin.pembayaran') }}" class="btn btn-success">
+                        <i class="fas fa-arrow-right"></i> Kelola Pembayaran
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-bar fa-3x text-info"></i>
+                    </div>
+                    <h5 class="card-title">Export & Laporan</h5>
+                    <p class="card-text">Export data peserta dan laporan revenue kompetisi</p>
+                    <a href="{{ url_for('admin.export_dashboard') }}" class="btn btn-info">
+                        <i class="fas fa-arrow-right"></i> Export Data
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Aktivitas Terbaru</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Info:</strong> Fitur aktivitas terbaru akan diimplementasikan pada task selanjutnya.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block title %}Profil Pengguna - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Profile Header -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-circle me-2"></i>
+                    Profil Pengguna
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if profile %}
+                    <!-- Progress Indicator -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">Kelengkapan Profil</span>
+                            <span class="badge bg-{% if profile.calculate_completion_percentage() == 100 %}success{% elif profile.calculate_completion_percentage() >= 50 %}warning{% else %}danger{% endif %} fs-6">
+                                {{ profile.calculate_completion_percentage() }}%
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar 
+                                {% if profile.calculate_completion_percentage() == 100 %}bg-success
+                                {% elif profile.calculate_completion_percentage() >= 50 %}bg-warning
+                                {% else %}bg-danger{% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ profile.calculate_completion_percentage() }}%"
+                                aria-valuenow="{{ profile.calculate_completion_percentage() }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
+                        </div>
+                        
+                        {% if profile.calculate_completion_percentage() < 100 %}
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <strong>Field yang belum lengkap:</strong>
+                                    {% for field in profile.get_missing_fields() %}
+                                        <span class="badge bg-light text-dark border me-1">{{ field }}</span>
+                                    {% endfor %}
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if profile.calculate_completion_percentage() < 100 %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Perhatian:</strong> Profil Anda belum lengkap. Anda harus melengkapi profil hingga 100% untuk dapat mendaftar kompetisi.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Selamat!</strong> Profil Anda sudah lengkap dan siap untuk mendaftar kompetisi.
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Profile Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Lengkapi Profil Anda
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="profileForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Personal Information Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i class="fas fa-user me-2"></i>
+                                Informasi Pribadi
+                            </h6>
+                        </div>
+                        
+                        <!-- Nama Lengkap -->
+                        <div class="col-md-6 mb-3">
+                            {{ form.nama_lengkap.label(class="form-label fw-bold") }}
+                            {{ form.nama_lengkap(class="form-control" + (" is-invalid" if form.nama_lengkap.errors else "")) }}
+                            {% if form.nama_lengkap.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.nama_lengkap.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Sekolah -->
+                        <div class="col-md-6 mb-3">
+                            {{ form.sekolah.label(class="form-label fw-bold") }}
+                            {{ form.sekolah(class="form-control" + (" is-invalid" if form.sekolah.errors else "")) }}
+                            {% if form.sekolah.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.sekolah.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Kelas -->
+                        <div class="col-md-6 mb-3">
+                            {{ form.kelas.label(class="form-label fw-bold") }}
+                            {{ form.kelas(class="form-select" + (" is-invalid" if form.kelas.errors else "")) }}
+                            {% if form.kelas.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.kelas.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- NISN -->
+                        <div class="col-md-6 mb-3">
+                            {{ form.nisn.label(class="form-label fw-bold") }}
+                            {{ form.nisn(class="form-control", placeholder="Contoh: 1234567890") }}
+                            {% if form.nisn.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.nisn.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">NISN terdiri dari 10 digit angka</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i class="fas fa-phone me-2"></i>
+                                Informasi Kontak
+                            </h6>
+                        </div>
+                        
+                        <!-- WhatsApp -->
+                        <div class="col-md-4 mb-3">
+                            {{ form.whatsapp.label(class="form-label fw-bold") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fab fa-whatsapp text-success"></i>
+                                </span>
+                                {{ form.whatsapp(class="form-control" + (" is-invalid" if form.whatsapp.errors else ""), placeholder="081234567890") }}
+                                {% if form.whatsapp.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.whatsapp.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-text">Format: 081234567890 atau +6281234567890</div>
+                        </div>
+                        
+                        <!-- Instagram -->
+                        <div class="col-md-4 mb-3">
+                            {{ form.instagram.label(class="form-label fw-bold") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fab fa-instagram text-danger"></i>
+                                </span>
+                                {{ form.instagram(class="form-control" + (" is-invalid" if form.instagram.errors else ""), placeholder="username") }}
+                                {% if form.instagram.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.instagram.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-text">Tanpa tanda @ di depan</div>
+                        </div>
+                        
+                        <!-- Removed Twitter field -->
+                    </div>
+                    
+                    <!-- Document Upload Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i class="fas fa-upload me-2"></i>
+                                Upload Dokumen
+                            </h6>
+                        </div>
+                        
+                        <!-- Foto Kartu Pelajar -->
+                        <div class="col-md-6 mb-3">
+                            {{ form.foto_kartu_pelajar.label(class="form-label fw-bold") }}
+                            {{ form.foto_kartu_pelajar(class="form-control" + (" is-invalid" if form.foto_kartu_pelajar.errors else ""), accept=".jpg,.jpeg,.png,.pdf") }}
+                            {% if form.foto_kartu_pelajar.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.foto_kartu_pelajar.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Format: JPG, JPEG, PNG, atau PDF (Maks. 5MB)</div>
+                            
+                            {% if profile and profile.foto_kartu_pelajar %}
+                                <div class="mt-2">
+                                    <small class="text-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        File sudah diupload: {{ profile.foto_kartu_pelajar }}
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Screenshot Twibbon -->
+                        <div class="col-md-6 mb-3">
+                            {{ form.screenshot_twibbon.label(class="form-label fw-bold") }}
+                            {{ form.screenshot_twibbon(class="form-control" + (" is-invalid" if form.screenshot_twibbon.errors else ""), accept=".jpg,.jpeg,.png") }}
+                            {% if form.screenshot_twibbon.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.screenshot_twibbon.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Format: JPG, JPEG, atau PNG (Maks. 3MB)</div>
+                            
+                            {% if profile and profile.screenshot_twibbon %}
+                                <div class="mt-2">
+                                    <small class="text-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        File sudah diupload: {{ profile.screenshot_twibbon }}
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary me-md-2">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Kembali ke Dashboard
+                                </a>
+                                {{ form.submit(class="btn btn-primary") }}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom JavaScript for form enhancements -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // File upload preview and validation
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    
+    fileInputs.forEach(function(input) {
+        input.addEventListener('change', function() {
+            const file = this.files[0];
+            const maxSize = this.id === 'foto_kartu_pelajar' ? 5 * 1024 * 1024 : 3 * 1024 * 1024; // 5MB or 3MB
+            
+            if (file) {
+                // Check file size
+                if (file.size > maxSize) {
+                    const maxSizeMB = maxSize / (1024 * 1024);
+                    alert(`Ukuran file terlalu besar. Maksimal ${maxSizeMB}MB.`);
+                    this.value = '';
+                    return;
+                }
+                
+                // Check file type
+                const allowedTypes = this.id === 'foto_kartu_pelajar' 
+                    ? ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf']
+                    : ['image/jpeg', 'image/jpg', 'image/png'];
+                
+                if (!allowedTypes.includes(file.type)) {
+                    const allowedExts = this.id === 'foto_kartu_pelajar' 
+                        ? 'JPG, JPEG, PNG, atau PDF' 
+                        : 'JPG, JPEG, atau PNG';
+                    alert(`File harus berformat ${allowedExts}.`);
+                    this.value = '';
+                    return;
+                }
+                
+                // Show file name
+                const fileName = file.name;
+                const feedback = this.parentNode.querySelector('.form-text');
+                if (feedback) {
+                    feedback.innerHTML = `<i class="fas fa-file-check text-success me-1"></i>File dipilih: ${fileName}`;
+                }
+            }
+        });
+    });
+    
+    // Form validation enhancement
+    const form = document.getElementById('profileForm');
+    form.addEventListener('submit', function(e) {
+        // Additional client-side validation can be added here
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+            
+            // Re-enable button after 5 seconds to prevent permanent disable
+            setTimeout(function() {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Simpan Profil';
+            }, 5000);
+        }
+    });
+    
+    // NISN input formatting
+    const nisnInput = document.getElementById('nisn');
+    if (nisnInput) {
+        nisnInput.addEventListener('input', function() {
+            // Only allow numbers
+            this.value = this.value.replace(/[^0-9]/g, '');
+            // Limit to 10 digits
+            if (this.value.length > 10) {
+                this.value = this.value.slice(0, 10);
+            }
+        });
+    }
+    
+    // WhatsApp input formatting
+    const whatsappInput = document.getElementById('whatsapp');
+    if (whatsappInput) {
+        whatsappInput.addEventListener('input', function() {
+            // Allow numbers, +, -, spaces, parentheses
+            this.value = this.value.replace(/[^0-9\+\-\s\(\)]/g, '');
+        });
+    }
+    
+    // Real-time progress update
+    function updateProgress() {
+        const requiredFields = ['nama_lengkap', 'sekolah', 'kelas', 'nisn', 'whatsapp', 'instagram'];
+        let completedFields = 0;
+        
+        requiredFields.forEach(function(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field && field.value.trim()) {
+                completedFields++;
+            }
+        });
+        
+        // Check file uploads
+        const fileFields = ['foto_kartu_pelajar', 'screenshot_twibbon'];
+        fileFields.forEach(function(fieldId) {
+            const field = document.getElementById(fieldId);
+            const existingFile = document.querySelector(`#${fieldId} + .form-text .text-success`);
+            if ((field && field.files.length > 0) || existingFile) {
+                completedFields++;
+            }
+        });
+        
+        const totalFields = requiredFields.length + fileFields.length;
+        const percentage = Math.round((completedFields / totalFields) * 100);
+        
+        // Update progress bar if it exists
+        const progressBar = document.querySelector('.progress-bar');
+        const progressText = document.querySelector('.badge.fs-6');
+        
+        if (progressBar && progressText) {
+            progressBar.style.width = percentage + '%';
+            progressBar.setAttribute('aria-valuenow', percentage);
+            progressText.textContent = percentage + '%';
+            
+            // Update colors
+            progressBar.className = 'progress-bar ' + 
+                (percentage === 100 ? 'bg-success' : 
+                 percentage >= 50 ? 'bg-warning' : 'bg-danger');
+            progressText.className = 'badge fs-6 ' + 
+                (percentage === 100 ? 'bg-success' : 
+                 percentage >= 50 ? 'bg-warning' : 'bg-danger');
+        }
+    }
+    
+    // Add event listeners for real-time progress update
+    const allInputs = document.querySelectorAll('#profileForm input, #profileForm select');
+    allInputs.forEach(function(input) {
+        input.addEventListener('input', updateProgress);
+        input.addEventListener('change', updateProgress);
+    });
+});
+</script>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}

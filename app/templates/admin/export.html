@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Export Data - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Export Data</h1>
+            <p class="text-muted">Export data peserta dan laporan kompetisi</p>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Export</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Export Options -->
+    <div class="row mb-4">
+        <!-- Export Users -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Export Pengguna
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Export daftar pengguna dengan informasi profil dan status verifikasi.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Filter Status:</label>
+                        <div class="btn-group d-grid gap-2" role="group">
+                            <a href="{{ url_for('admin.export_users', status='all') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-download me-1"></i>
+                                Semua Pengguna
+                            </a>
+                            <a href="{{ url_for('admin.export_users', status='verified') }}" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-check-circle me-1"></i>
+                                Terverifikasi
+                            </a>
+                            <a href="{{ url_for('admin.export_users', status='unverified') }}" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-clock me-1"></i>
+                                Belum Terverifikasi
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Revenue -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Export Revenue
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Export laporan revenue dan statistik keuangan semua kompetisi.</p>
+                    
+                    <div class="mb-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('admin.export_revenue') }}" class="btn btn-success">
+                                <i class="fas fa-file-excel me-1"></i>
+                                Download Laporan Revenue
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info py-2">
+                        <small>
+                            <i class="fas fa-info-circle me-1"></i>
+                            Termasuk breakdown early bird vs regular pricing
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Instructions -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>
+                        Panduan Export
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Format File:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-file-csv text-success me-1"></i> CSV (Comma Separated Values)</li>
+                            <li><i class="fas fa-table text-info me-1"></i> Compatible dengan Excel</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Cara Membuka:</h6>
+                        <ol class="small">
+                            <li>Download file CSV</li>
+                            <li>Buka dengan Excel atau Google Sheets</li>
+                            <li>Pilih delimiter "comma" jika diperlukan</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Competition Export -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-trophy me-2"></i>
+                Export Data Kompetisi
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if export_stats %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Kompetisi</th>
+                                <th>Kategori</th>
+                                <th>Total Registrasi</th>
+                                <th>Disetujui</th>
+                                <th>Sudah Bayar</th>
+                                <th>Revenue</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in export_stats %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ stat.competition.nama_kompetisi }}</strong>
+                                        <div class="small text-muted">{{ stat.competition.get_competition_type_display() }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if stat.competition.kategori == 'individual' %}bg-primary
+                                        {% else %}bg-success{% endif %}">
+                                        {{ stat.competition.get_category_display() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ stat.total_registrations }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ stat.approved_registrations }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ stat.paid_registrations }}</span>
+                                </td>
+                                <td>
+                                    <strong class="text-success">Rp {{ "{:,}".format(stat.revenue) }}</strong>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                            <i class="fas fa-download"></i> Export
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <h6 class="dropdown-header">Semua Peserta</h6>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('admin.export_participants', competition_id=stat.competition.id, status='all') }}">
+                                                    <i class="fas fa-users me-1"></i>
+                                                    Semua ({{ stat.total_registrations }})
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('admin.export_participants', competition_id=stat.competition.id, status='approved') }}">
+                                                    <i class="fas fa-check-circle me-1"></i>
+                                                    Disetujui ({{ stat.approved_registrations }})
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('admin.export_participants', competition_id=stat.competition.id, status='paid') }}">
+                                                    <i class="fas fa-credit-card me-1"></i>
+                                                    Sudah Bayar ({{ stat.paid_registrations }})
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Belum Ada Kompetisi</h5>
+                    <p class="text-muted">Kompetisi akan muncul di sini setelah dibuat</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Export Summary -->
+    {% if export_stats %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Ringkasan Export
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-primary mb-1">{{ export_stats|length }}</h4>
+                                <small class="text-muted">Total Kompetisi</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-info mb-1">{{ export_stats|sum(attribute='total_registrations') }}</h4>
+                                <small class="text-muted">Total Registrasi</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-success mb-1">{{ export_stats|sum(attribute='paid_registrations') }}</h4>
+                                <small class="text-muted">Sudah Bayar</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-warning mb-1">Rp {{ "{:,}".format(export_stats|sum(attribute='revenue')) }}</h4>
+                            <small class="text-muted">Total Revenue</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}

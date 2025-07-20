@@ -1,0 +1,587 @@
+{% extends "base.html" %}
+
+{% block title %}Daftar Kompetisi - {{ competition.nama_kompetisi }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Competition Info Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-trophy me-2"></i>
+                    Pendaftaran Kompetisi: {{ competition.nama_kompetisi }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Kategori:</strong> {{ competition.get_category_display() }}</p>
+                        <p><strong>Jenis:</strong> {{ competition.get_competition_type_display() }}</p>
+                        <p><strong>Kelas:</strong> {{ competition.min_kelas }}-{{ competition.max_kelas }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Tanggal Kompetisi:</strong> {{ competition.tanggal_kompetisi.strftime('%d %B %Y') }}</p>
+                        <p><strong>Deadline Registrasi:</strong> {{ competition.deadline_registrasi.strftime('%d %B %Y') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Info Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    Informasi Harga
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        {% if pricing_info.is_early_bird_active %}
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-clock me-2"></i>Early Bird Aktif!</h6>
+                                <p class="mb-1"><strong>Harga Sekarang:</strong> {{ pricing_info.current_price_formatted }}</p>
+                                <p class="mb-1"><strong>Hemat:</strong> {{ pricing_info.savings_formatted }} ({{ pricing_info.savings_percentage }}%)</p>
+                                <small>Berakhir: {{ pricing_info.early_bird_end_formatted }}</small>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-tag me-2"></i>Harga Reguler</h6>
+                                <p class="mb-0"><strong>Harga:</strong> {{ pricing_info.current_price_formatted }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-lock me-2"></i>Harga Terkunci</h6>
+                            <p class="mb-1">Harga akan dikunci saat pendaftaran</p>
+                            <p class="mb-0"><small>Pembayaran dalam 24 jam setelah daftar</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Form Pendaftaran
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="registrationForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Competition Type Info -->
+                    <div class="alert alert-light border">
+                        <h6><i class="fas fa-info-circle me-2"></i>Persyaratan Submission</h6>
+                        {% if competition.jenis.lower() in ['math', 'science', 'logic', 'informatics'] %}
+                            <p class="mb-1"><strong>Kompetisi Akademik:</strong> Upload file karya Anda</p>
+                            <p class="mb-0"><small>Format yang diizinkan: 
+                                {% if competition.jenis.lower() == 'informatics' %}
+                                    PDF, DOC, DOCX, PY, CPP, JAVA, TXT, ZIP
+                                {% else %}
+                                    PDF, DOC, DOCX
+                                {% endif %}
+                                (Maksimal 10MB)
+                            </small></p>
+                        {% elif competition.jenis.lower() in ['creative', 'performance'] %}
+                            <p class="mb-1"><strong>Kompetisi Kreatif/Performa:</strong> Berikan link Google Drive</p>
+                            <p class="mb-0"><small>Pastikan link dapat diakses oleh siapa saja dengan link</small></p>
+                        {% endif %}
+                    </div>
+
+                    <!-- File Upload for Academic Competitions -->
+                    {% if competition.jenis.lower() in ['math', 'science', 'logic', 'informatics'] %}
+                        <div class="mb-3">
+                            {{ form.file_submission.label(class="form-label") }}
+                            <div class="file-upload-container">
+                                <div class="file-upload-area border border-2 border-dashed rounded p-4 text-center" 
+                                     id="fileUploadArea"
+                                     ondrop="dropHandler(event);" 
+                                     ondragover="dragOverHandler(event);"
+                                     ondragenter="dragEnterHandler(event);"
+                                     ondragleave="dragLeaveHandler(event);">
+                                    <div id="uploadPrompt">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                        <h6 class="mb-2">Drag & Drop File atau Klik untuk Memilih</h6>
+                                        <p class="text-muted mb-3">
+                                            {% if competition.jenis.lower() == 'informatics' %}
+                                                Format: PDF, DOC, DOCX, PY, CPP, JAVA, TXT, ZIP, RAR
+                                            {% else %}
+                                                Format: PDF, DOC, DOCX
+                                            {% endif %}
+                                            <br><small>Maksimal 15MB</small>
+                                        </p>
+                                        {{ form.file_submission(class="form-control", style="display: none;", id="fileInput", accept=".pdf,.doc,.docx,.py,.cpp,.java,.txt,.zip,.rar") }}
+                                        <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('fileInput').click();">
+                                            <i class="fas fa-folder-open me-2"></i>Pilih File
+                                        </button>
+                                    </div>
+                                    <div id="filePreview" class="mt-3" style="display: none;">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-3">
+                                                        <i id="fileIcon" class="fa-2x"></i>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 id="fileName" class="mb-1"></h6>
+                                                        <p id="fileType" class="mb-1 text-muted"></p>
+                                                        <small id="fileSize" class="text-muted"></small>
+                                                    </div>
+                                                    <div>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeFile()">
+                                                            <i class="fas fa-times me-1"></i>Hapus
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="uploadProgress" class="mt-3" style="display: none;">
+                                        <div class="progress">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                                 role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                        <small class="text-muted">Memvalidasi file...</small>
+                                    </div>
+                                </div>
+                                <div id="fileValidation" class="mt-2" style="display: none;"></div>
+                            </div>
+                            {% if form.file_submission.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.file_submission.errors %}
+                                        <small>{{ error }}</small><br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Google Drive Link for Creative/Performance Competitions -->
+                    {% if competition.jenis.lower() in ['creative', 'performance'] %}
+                        <div class="mb-3">
+                            {{ form.google_drive_link.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fab fa-google-drive"></i>
+                                </span>
+                                {{ form.google_drive_link(class="form-control", placeholder="https://drive.google.com/file/d/...") }}
+                            </div>
+                            <div class="form-text">
+                                Pastikan file dapat diakses dengan pengaturan "Anyone with the link can view"
+                            </div>
+                            {% if form.google_drive_link.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.google_drive_link.errors %}
+                                        <small>{{ error }}</small><br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Additional Notes -->
+                    <div class="mb-3">
+                        {{ form.catatan.label(class="form-label") }}
+                        {{ form.catatan(class="form-control", rows="3", placeholder="Catatan tambahan (opsional)") }}
+                        {% if form.catatan.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.catatan.errors %}
+                                    <small>{{ error }}</small><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                Saya menyetujui <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">syarat dan ketentuan</a> kompetisi ini
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Price Confirmation -->
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Konfirmasi Harga</h6>
+                        <p class="mb-1">Dengan mendaftar, Anda menyetujui untuk membayar:</p>
+                        <h5 class="mb-1 text-primary">{{ pricing_info.current_price_formatted }}</h5>
+                        <small>Harga ini akan dikunci dan harus dibayar dalam 24 jam setelah pendaftaran</small>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Syarat dan Ketentuan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Ketentuan Umum:</h6>
+                <ul>
+                    <li>Peserta harus siswa SMP kelas 7, 8, atau 9</li>
+                    <li>Profil peserta harus lengkap dan terverifikasi</li>
+                    <li>Pembayaran harus dilakukan dalam 24 jam setelah pendaftaran</li>
+                    <li>Harga yang sudah dikunci tidak dapat berubah</li>
+                    <li>Tidak ada pengembalian uang setelah pembayaran disetujui</li>
+                </ul>
+                
+                <h6>Ketentuan Submission:</h6>
+                <ul>
+                    {% if competition.jenis.lower() in ['math', 'science', 'logic', 'informatics'] %}
+                        <li>File harus dalam format yang diizinkan</li>
+                        <li>Ukuran file maksimal 10MB</li>
+                        <li>File harus merupakan karya asli peserta</li>
+                    {% elif competition.jenis.lower() in ['creative', 'performance'] %}
+                        <li>Link Google Drive harus dapat diakses</li>
+                        <li>Konten harus merupakan karya asli peserta</li>
+                        <li>File dalam Google Drive harus sesuai dengan tema kompetisi</li>
+                    {% endif %}
+                </ul>
+                
+                <h6>Ketentuan Kompetisi:</h6>
+                <ul>
+                    <li>Keputusan juri bersifat final</li>
+                    <li>Peserta wajib mengikuti seluruh rangkaian kompetisi</li>
+                    <li>Pelanggaran aturan dapat mengakibatkan diskualifikasi</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enhanced file upload functionality with validation
+let currentFile = null;
+
+// File type icons mapping
+const fileIcons = {
+    'pdf': 'fas fa-file-pdf text-danger',
+    'doc': 'fas fa-file-word text-primary',
+    'docx': 'fas fa-file-word text-primary',
+    'py': 'fas fa-file-code text-success',
+    'cpp': 'fas fa-file-code text-info',
+    'java': 'fas fa-file-code text-warning',
+    'txt': 'fas fa-file-alt text-secondary',
+    'zip': 'fas fa-file-archive text-dark',
+    'rar': 'fas fa-file-archive text-dark'
+};
+
+// File type descriptions
+const fileTypes = {
+    'pdf': 'PDF Document',
+    'doc': 'Word Document',
+    'docx': 'Word Document',
+    'py': 'Python Code',
+    'cpp': 'C++ Code',
+    'java': 'Java Code',
+    'txt': 'Text File',
+    'zip': 'Archive File',
+    'rar': 'Archive File'
+};
+
+// Drag and drop handlers
+function dragOverHandler(ev) {
+    ev.preventDefault();
+    const uploadArea = ev.currentTarget;
+    uploadArea.classList.add('border-primary', 'bg-light');
+}
+
+function dragEnterHandler(ev) {
+    ev.preventDefault();
+    const uploadArea = ev.currentTarget;
+    uploadArea.classList.add('border-primary', 'bg-light');
+}
+
+function dragLeaveHandler(ev) {
+    ev.preventDefault();
+    const uploadArea = ev.currentTarget;
+    uploadArea.classList.remove('border-primary', 'bg-light');
+}
+
+function dropHandler(ev) {
+    ev.preventDefault();
+    const uploadArea = ev.currentTarget;
+    uploadArea.classList.remove('border-primary', 'bg-light');
+    
+    const files = ev.dataTransfer.files;
+    if (files.length > 0) {
+        handleFileSelection(files[0]);
+    }
+}
+
+// Handle file selection (from drag-drop or file input)
+function handleFileSelection(file) {
+    const fileInput = document.getElementById('fileInput');
+    
+    // Create a new FileList with the selected file
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    
+    // Validate and preview file
+    validateAndPreviewFile(file);
+}
+
+// Validate file and show preview
+function validateAndPreviewFile(file) {
+    currentFile = file;
+    
+    // Show progress
+    showUploadProgress();
+    
+    // Simulate validation delay
+    setTimeout(() => {
+        const validation = validateFile(file);
+        hideUploadProgress();
+        
+        if (validation.isValid) {
+            showFilePreview(file);
+            hideValidationMessage();
+        } else {
+            showValidationError(validation.error);
+            hideFilePreview();
+        }
+    }, 500);
+}
+
+// File validation logic
+function validateFile(file) {
+    const maxSize = 15 * 1024 * 1024; // 15MB
+    const fileName = file.name.toLowerCase();
+    const extension = fileName.split('.').pop();
+    
+    // Get competition type from template
+    const competitionType = '{{ competition.jenis.lower() }}';
+    
+    // Define allowed extensions based on competition type
+    let allowedExtensions = [];
+    if (competitionType === 'informatics') {
+        allowedExtensions = ['pdf', 'doc', 'docx', 'py', 'cpp', 'java', 'txt', 'zip', 'rar'];
+    } else {
+        allowedExtensions = ['pdf', 'doc', 'docx'];
+    }
+    
+    // Check file extension
+    if (!allowedExtensions.includes(extension)) {
+        return {
+            isValid: false,
+            error: `Format file tidak diizinkan. Gunakan: ${allowedExtensions.join(', ').toUpperCase()}`
+        };
+    }
+    
+    // Check file size
+    if (file.size > maxSize) {
+        return {
+            isValid: false,
+            error: 'Ukuran file terlalu besar. Maksimal 15MB.'
+        };
+    }
+    
+    // Additional validation for code files
+    if (['py', 'cpp', 'java'].includes(extension)) {
+        if (file.size < 10) {
+            return {
+                isValid: false,
+                error: 'File kode terlalu kecil. Pastikan file berisi kode yang valid.'
+            };
+        }
+    }
+    
+    return { isValid: true };
+}
+
+// Show file preview
+function showFilePreview(file) {
+    const uploadPrompt = document.getElementById('uploadPrompt');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileType = document.getElementById('fileType');
+    const fileSize = document.getElementById('fileSize');
+    const fileIcon = document.getElementById('fileIcon');
+    
+    // Hide upload prompt and show preview
+    uploadPrompt.style.display = 'none';
+    filePreview.style.display = 'block';
+    
+    // Get file info
+    const extension = file.name.split('.').pop().toLowerCase();
+    const sizeFormatted = formatFileSize(file.size);
+    
+    // Update preview content
+    fileName.textContent = file.name;
+    fileType.textContent = fileTypes[extension] || 'Unknown File';
+    fileSize.textContent = sizeFormatted;
+    fileIcon.className = fileIcons[extension] || 'fas fa-file text-muted';
+}
+
+// Hide file preview
+function hideFilePreview() {
+    const uploadPrompt = document.getElementById('uploadPrompt');
+    const filePreview = document.getElementById('filePreview');
+    
+    uploadPrompt.style.display = 'block';
+    filePreview.style.display = 'none';
+}
+
+// Show upload progress
+function showUploadProgress() {
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressBar = uploadProgress.querySelector('.progress-bar');
+    
+    uploadProgress.style.display = 'block';
+    
+    // Animate progress bar
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 20;
+        progressBar.style.width = progress + '%';
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+        }
+    }, 100);
+}
+
+// Hide upload progress
+function hideUploadProgress() {
+    const uploadProgress = document.getElementById('uploadProgress');
+    uploadProgress.style.display = 'none';
+    
+    // Reset progress bar
+    const progressBar = uploadProgress.querySelector('.progress-bar');
+    progressBar.style.width = '0%';
+}
+
+// Show validation error
+function showValidationError(error) {
+    const fileValidation = document.getElementById('fileValidation');
+    fileValidation.innerHTML = `
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${error}
+        </div>
+    `;
+    fileValidation.style.display = 'block';
+}
+
+// Hide validation message
+function hideValidationMessage() {
+    const fileValidation = document.getElementById('fileValidation');
+    fileValidation.style.display = 'none';
+}
+
+// Remove file
+function removeFile() {
+    const fileInput = document.getElementById('fileInput');
+    fileInput.value = '';
+    currentFile = null;
+    
+    hideFilePreview();
+    hideValidationMessage();
+}
+
+// Format file size
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// File input change handler
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                validateAndPreviewFile(e.target.files[0]);
+            }
+        });
+    }
+});
+
+// Form validation
+document.getElementById('registrationForm').addEventListener('submit', function(e) {
+    const termsCheck = document.getElementById('termsCheck');
+    if (!termsCheck.checked) {
+        e.preventDefault();
+        alert('Anda harus menyetujui syarat dan ketentuan untuk melanjutkan.');
+        return false;
+    }
+    
+    // Check if file is required and selected for academic competitions
+    const competitionType = '{{ competition.jenis.lower() }}';
+    const academicTypes = ['math', 'science', 'logic', 'informatics'];
+    
+    if (academicTypes.includes(competitionType) && !currentFile) {
+        e.preventDefault();
+        alert('File karya wajib diupload untuk kompetisi akademik.');
+        return false;
+    }
+    
+    // Show loading state
+    const submitBtn = document.querySelector('input[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.value = 'Memproses...';
+    
+    // Add spinner to button
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
+});
+
+// Add CSS for enhanced styling
+const style = document.createElement('style');
+style.textContent = `
+    .file-upload-area {
+        transition: all 0.3s ease;
+        min-height: 200px;
+        cursor: pointer;
+    }
+    
+    .file-upload-area:hover {
+        border-color: #0d6efd !important;
+        background-color: #f8f9fa !important;
+    }
+    
+    .file-upload-area.border-primary {
+        border-color: #0d6efd !important;
+        background-color: #e7f3ff !important;
+    }
+    
+    .progress-bar-animated {
+        animation: progress-bar-stripes 1s linear infinite;
+    }
+    
+    @keyframes progress-bar-stripes {
+        0% { background-position: 1rem 0; }
+        100% { background-position: 0 0; }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

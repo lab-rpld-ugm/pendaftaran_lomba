@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Bukti Pembayaran - {{ payment.registration.competition.nama_kompetisi }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Beranda</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Bukti Pembayaran</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Payment Header -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h2 class="mb-1">{{ payment.registration.competition.nama_kompetisi }}</h2>
+                            <p class="text-muted mb-0">{{ payment.registration.get_type().title() }} Registration</p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge 
+                                {% if payment.status == 'approved' %}bg-success
+                                {% elif payment.status == 'rejected' %}bg-danger
+                                {% else %}bg-warning{% endif %} fs-6">
+                                <i class="fas 
+                                    {% if payment.status == 'approved' %}fa-check-circle
+                                    {% elif payment.status == 'rejected' %}fa-times-circle
+                                    {% else %}fa-clock{% endif %} me-1"></i>
+                                {{ payment.get_status_display() }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-tag text-success me-2"></i>
+                                <span><strong>{{ payment.get_amount_display() }}</strong></span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-calendar text-info me-2"></i>
+                                <span>{{ payment.registration.tanggal_registrasi.strftime('%d %b %Y') }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-upload text-primary me-2"></i>
+                                <span>{{ payment.tanggal_upload.strftime('%d %b %Y') if payment.tanggal_upload else 'Belum upload' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <span>{{ payment.tanggal_approval.strftime('%d %b %Y') if payment.tanggal_approval else 'Belum disetujui' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Proof -->
+            {% if payment.bukti_pembayaran %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-receipt me-2"></i>
+                            Bukti Pembayaran
+                        </h5>
+                        {% if payment.can_be_modified() %}
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('payment.edit_proof', id=payment.id) }}">
+                                            <i class="fas fa-edit me-1"></i>
+                                            Edit Bukti
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <form method="POST" action="{{ url_for('payment.delete_proof', id=payment.id) }}" class="d-inline">
+                                            <button type="submit" class="dropdown-item text-danger" 
+                                                    onclick="return confirm('Yakin ingin menghapus bukti pembayaran?')">
+                                                <i class="fas fa-trash me-1"></i>
+                                                Hapus Bukti
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            {% set file_ext = payment.bukti_pembayaran.split('.')[-1].lower() %}
+                            {% if file_ext in ['jpg', 'jpeg', 'png'] %}
+                                <img src="{{ url_for('payment.uploaded_file', filename=payment.bukti_pembayaran) }}" 
+                                     class="img-fluid rounded shadow-sm" 
+                                     style="max-height: 400px;"
+                                     alt="Bukti Pembayaran">
+                            {% else %}
+                                <div class="p-4">
+                                    <i class="fas fa-file-pdf fa-4x text-danger mb-3"></i>
+                                    <p class="mb-0">{{ payment.bukti_pembayaran }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid">
+                            <a href="{{ url_for('payment.uploaded_file', filename=payment.bukti_pembayaran) }}" 
+                               class="btn btn-outline-primary" target="_blank">
+                                <i class="fas fa-download me-1"></i>
+                                Download Bukti Pembayaran
+                            </a>
+                        </div>
+                        
+                        {% if payment.catatan_user %}
+                            <div class="mt-3">
+                                <h6>Catatan:</h6>
+                                <p class="text-muted">{{ payment.catatan_user }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
+                        <h5>Bukti Pembayaran Belum Diupload</h5>
+                        <p class="text-muted mb-4">Silakan upload bukti pembayaran untuk melanjutkan proses verifikasi.</p>
+                        
+                        {% if payment.can_be_modified() %}
+                            <a href="{{ url_for('payment.upload_proof', id=payment.id) }}" class="btn btn-primary">
+                                <i class="fas fa-upload me-1"></i>
+                                Upload Bukti Pembayaran
+                            </a>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                Batas waktu upload sudah terlewat
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Admin Notes -->
+            {% if payment.catatan_admin %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-comment-alt me-2"></i>
+                            Catatan Admin
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">{{ payment.catatan_admin }}</p>
+                        {% if payment.tanggal_approval %}
+                            <small class="text-muted">
+                                {{ payment.tanggal_approval.strftime('%d %B %Y, %H:%M') }}
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Payment Status -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Status Pembayaran
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <span class="badge 
+                            {% if payment.status == 'approved' %}bg-success
+                            {% elif payment.status == 'rejected' %}bg-danger
+                            {% else %}bg-warning text-dark{% endif %} fs-6">
+                            {{ payment.get_status_display() }}
+                        </span>
+                    </div>
+                    
+                    {% if payment.status == 'pending' %}
+                        <div class="alert alert-info py-2">
+                            <small>
+                                <i class="fas fa-clock me-1"></i>
+                                Menunggu verifikasi admin
+                            </small>
+                        </div>
+                    {% elif payment.status == 'approved' %}
+                        <div class="alert alert-success py-2">
+                            <small>
+                                <i class="fas fa-check-circle me-1"></i>
+                                Pembayaran telah disetujui
+                            </small>
+                        </div>
+                    {% elif payment.status == 'rejected' %}
+                        <div class="alert alert-danger py-2">
+                            <small>
+                                <i class="fas fa-times-circle me-1"></i>
+                                Pembayaran ditolak
+                            </small>
+                        </div>
+                    {% endif %}
+                    
+                    {% if payment.status == 'pending' and not payment.is_upload_deadline_passed() %}
+                        <div class="text-center">
+                            <small class="text-muted">
+                                Deadline upload: {{ payment.get_time_left_display() }}
+                            </small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Competition Info -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-trophy me-2"></i>
+                        Info Kompetisi
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>{{ payment.registration.competition.nama_kompetisi }}</strong>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-calendar text-primary me-2"></i>
+                        <small>{{ payment.registration.competition.tanggal_kompetisi.strftime('%d %B %Y') }}</small>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-users text-info me-2"></i>
+                        <small>{{ payment.registration.get_type().title() }}</small>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-tag text-success me-2"></i>
+                        <small>{{ payment.get_amount_display() }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Aksi
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if not payment.bukti_pembayaran and payment.can_be_modified() %}
+                            <a href="{{ url_for('payment.upload_proof', id=payment.id) }}" class="btn btn-primary">
+                                <i class="fas fa-upload me-1"></i>
+                                Upload Bukti
+                            </a>
+                        {% elif payment.can_be_modified() %}
+                            <a href="{{ url_for('payment.edit_proof', id=payment.id) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>
+                                Edit Bukti
+                            </a>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-tachometer-alt me-1"></i>
+                            Dashboard
+                        </a>
+                        <a href="{{ url_for('competition.detail', id=payment.registration.competition_id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-eye me-1"></i>
+                            Lihat Kompetisi
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}

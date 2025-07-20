@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Buat Tim - {{ competition.nama_kompetisi }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Beranda</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('competition.index') }}">Kompetisi</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('competition.detail', id=competition.id) }}">{{ competition.nama_kompetisi }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Buat Tim</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Competition Info -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-primary bg-opacity-10 me-3">
+                            <i class="fas fa-users text-primary"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ competition.nama_kompetisi }}</h5>
+                            <p class="text-muted mb-0">{{ competition.get_competition_type_display() }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-users text-info me-2"></i>
+                                <span><strong>Anggota Tim:</strong> {{ competition.min_anggota }} - {{ competition.max_anggota }} orang</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-tag text-success me-2"></i>
+                                <span><strong>Harga:</strong> Rp {{ "{:,}".format(competition.get_current_price()) }} per orang</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Team Form -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Buat Tim Baru
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-4">
+                            {{ form.nama_tim.label(class="form-label") }}
+                            {{ form.nama_tim(class="form-control" + (" is-invalid" if form.nama_tim.errors else "")) }}
+                            {% if form.nama_tim.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.nama_tim.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Nama tim harus unik untuk kompetisi ini dan antara 3-100 karakter.
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <div class="d-flex">
+                                <i class="fas fa-info-circle me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-2">Informasi Penting</h6>
+                                    <ul class="mb-0">
+                                        <li>Anda akan menjadi <strong>kapten tim</strong> secara otomatis</li>
+                                        <li>Semua anggota tim harus dari <strong>sekolah yang sama</strong></li>
+                                        <li>Anggota tim harus memiliki <strong>profil yang lengkap dan terverifikasi</strong></li>
+                                        <li>Tim harus memiliki minimal <strong>{{ competition.min_anggota }} anggota</strong> untuk dapat mendaftar</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('competition.detail', id=competition.id) }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Kembali
+                            </a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}

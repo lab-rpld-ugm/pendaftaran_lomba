@@ -1,0 +1,494 @@
+/* Custom CSS for PDC 2025 Competition System */
+
+/* Mobile-first responsive design */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --warning-color: #fd7e14;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+}
+
+/* Base responsive styles */
+body {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Mobile navigation improvements */
+@media (max-width: 991.98px) {
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .navbar-nav .dropdown-menu {
+        border: none;
+        box-shadow: none;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .navbar-nav .dropdown-item {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.5rem 1.5rem;
+    }
+    
+    .navbar-nav .dropdown-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+}
+
+/* Responsive cards */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile-friendly buttons */
+@media (max-width: 767.98px) {
+    .btn-lg {
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .btn-group-vertical .btn {
+        margin-bottom: 0.5rem;
+    }
+    
+    .d-grid .btn {
+        padding: 0.75rem;
+    }
+}
+
+/* Responsive tables */
+.table-responsive {
+    border-radius: 0.375rem;
+}
+
+@media (max-width: 767.98px) {
+    .table-responsive table {
+        font-size: 0.875rem;
+    }
+    
+    .table-responsive th,
+    .table-responsive td {
+        padding: 0.5rem;
+        white-space: nowrap;
+    }
+}
+
+/* Mobile-optimized forms */
+@media (max-width: 767.98px) {
+    .form-control,
+    .form-select {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 0.75rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .input-group .form-control {
+        font-size: 14px;
+    }
+}
+
+/* Touch-friendly elements */
+@media (hover: none) and (pointer: coarse) {
+    .btn {
+        min-height: 44px; /* iOS touch target size */
+        padding: 0.75rem 1rem;
+    }
+    
+    .nav-link {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .dropdown-item {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* Responsive spacing */
+@media (max-width: 575.98px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .row > * {
+        margin-bottom: 1rem;
+    }
+    
+    .mb-4 {
+        margin-bottom: 2rem !important;
+    }
+    
+    .mt-4 {
+        margin-top: 2rem !important;
+    }
+}
+
+/* Icon circles for better mobile display */
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+@media (max-width: 575.98px) {
+    .icon-circle {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* Progress bars */
+.progress {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Badge improvements */
+.badge {
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+@media (max-width: 575.98px) {
+    .badge {
+        font-size: 0.7em;
+        padding: 0.35em 0.5em;
+    }
+}
+
+/* Alert improvements */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.alert-dismissible .btn-close {
+    padding: 1rem;
+}
+
+/* Modal improvements for mobile */
+@media (max-width: 575.98px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    .modal-header {
+        padding: 1rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem;
+        flex-direction: column;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .modal-footer .btn:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* File upload area improvements */
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.upload-area.dragover {
+    border-color: var(--primary-color);
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+@media (max-width: 575.98px) {
+    .upload-area {
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* Competition cards responsive */
+@media (max-width: 767.98px) {
+    .competition-card .card-body {
+        padding: 1rem;
+    }
+    
+    .competition-card .btn-group {
+        flex-direction: column;
+    }
+    
+    .competition-card .btn-group .btn {
+        margin-bottom: 0.25rem;
+    }
+}
+
+/* Dashboard responsive improvements */
+@media (max-width: 991.98px) {
+    .dashboard-sidebar {
+        margin-top: 2rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .dashboard-stats .col-6 {
+        margin-bottom: 1rem;
+    }
+    
+    .dashboard-stats .border-end {
+        border-right: none !important;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 1rem;
+    }
+}
+
+/* Admin panel responsive */
+@media (max-width: 767.98px) {
+    .admin-cards .col-xl-4,
+    .admin-cards .col-lg-6 {
+        margin-bottom: 1rem;
+    }
+    
+    .admin-card .card-body {
+        padding: 1rem;
+    }
+    
+    .admin-card .btn-group {
+        flex-direction: column;
+    }
+}
+
+/* Breadcrumb responsive */
+@media (max-width: 575.98px) {
+    .breadcrumb {
+        font-size: 0.875rem;
+        padding: 0.5rem 0;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+}
+
+/* Footer responsive */
+@media (max-width: 575.98px) {
+    footer {
+        padding: 2rem 0 !important;
+        margin-top: 3rem !important;
+    }
+    
+    footer p {
+        font-size: 0.875rem;
+    }
+}
+
+/* Utility classes for mobile */
+@media (max-width: 575.98px) {
+    .mobile-stack > * {
+        margin-bottom: 0.5rem;
+    }
+    
+    .mobile-stack > *:last-child {
+        margin-bottom: 0;
+    }
+    
+    .mobile-center {
+        text-align: center;
+    }
+    
+    .mobile-full-width {
+        width: 100%;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Accessibility improvements */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus improvements */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .card {
+        border: 1px solid #000;
+    }
+    
+    .btn-outline-primary {
+        border-color: #000;
+        color: #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar,
+    .btn,
+    .alert-dismissible .btn-close,
+    footer {
+        display: none !important;
+    }
+    
+    .container {
+        max-width: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000;
+        box-shadow: none;
+    }
+}/* Erro
+r pages */
+.error-template {
+    padding: 40px 15px;
+    text-align: center;
+}
+
+.error-template h1 {
+    font-size: 8rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.error-template h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.error-details {
+    margin-bottom: 30px;
+}
+
+.error-actions .btn {
+    margin: 5px;
+}
+
+/* Verification status components */
+.verification-badge {
+    font-size: 0.875rem;
+}
+
+.verification-progress {
+    height: 8px;
+}
+
+/* Form validation styles */
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #dc3545;
+}
+
+.is-valid {
+    border-color: #28a745;
+}
+
+.valid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #28a745;
+}
+
+/* Error page responsive adjustments */
+@media (max-width: 768px) {
+    .error-template h1 {
+        font-size: 4rem;
+    }
+    
+    .error-template h2 {
+        font-size: 1.5rem;
+    }
+    
+    .error-actions .btn {
+        display: block;
+        width: 100%;
+        margin: 5px 0;
+    }
+}

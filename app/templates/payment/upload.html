@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Bukti Pembayaran{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Beranda</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Upload Bukti Pembayaran</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Payment Info -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-primary bg-opacity-10 me-3">
+                            <i class="fas fa-credit-card text-primary"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ payment.registration.competition.nama_kompetisi }}</h5>
+                            <p class="text-muted mb-0">{{ payment.registration.get_type().title() }} Registration</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-tag text-success me-2"></i>
+                                <span><strong>Total:</strong> {{ payment.get_amount_display() }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-clock text-warning me-2"></i>
+                                <span><strong>Deadline:</strong> {{ payment.get_time_left_display() }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-calendar text-info me-2"></i>
+                                <span><strong>Terdaftar:</strong> {{ payment.registration.tanggal_registrasi.strftime('%d %b %Y') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Form -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        Upload Bukti Pembayaran
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-4">
+                            {{ form.bukti_pembayaran.label(class="form-label") }}
+                            <div class="upload-area border border-2 border-dashed rounded p-4 text-center" id="uploadArea">
+                                {{ form.bukti_pembayaran(class="form-control d-none", id="fileInput", accept=".jpg,.jpeg,.png,.pdf") }}
+                                <div class="upload-placeholder">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                    <p class="mb-2">Klik untuk memilih file atau drag & drop</p>
+                                    <small class="text-muted">Format: JPG, PNG, PDF (Maksimal 10MB)</small>
+                                </div>
+                                <div class="upload-preview d-none">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-file fa-2x text-primary me-3"></i>
+                                        <div>
+                                            <p class="mb-0 fw-bold" id="fileName"></p>
+                                            <small class="text-muted" id="fileSize"></small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-3" id="removeFile">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if form.bukti_pembayaran.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.bukti_pembayaran.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.catatan.label(class="form-label") }}
+                            {{ form.catatan(class="form-control", rows="3", placeholder="Tambahkan catatan jika diperlukan (opsional)") }}
+                            {% if form.catatan.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.catatan.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Catatan dapat membantu admin memverifikasi pembayaran Anda.
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <div class="d-flex">
+                                <i class="fas fa-info-circle me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-2">Informasi Penting</h6>
+                                    <ul class="mb-0">
+                                        <li>Upload bukti transfer atau pembayaran yang jelas</li>
+                                        <li>Pastikan nominal dan tanggal pembayaran terlihat</li>
+                                        <li>Bukti pembayaran akan diverifikasi oleh admin dalam 1x24 jam</li>
+                                        <li>Anda akan mendapat notifikasi setelah verifikasi selesai</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Kembali
+                            </a>
+                            {{ form.submit(class="btn btn-primary", id="submitBtn", disabled=True) }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-area {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-area:hover {
+    border-color: #0d6efd !important;
+    background-color: #f8f9fa;
+}
+
+.upload-area.dragover {
+    border-color: #0d6efd !important;
+    background-color: #e7f3ff;
+}
+</style>
+
+<!-- JavaScript for file upload -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const uploadPlaceholder = document.querySelector('.upload-placeholder');
+    const uploadPreview = document.querySelector('.upload-preview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeFile = document.getElementById('removeFile');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Click to upload
+    uploadArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    // Remove file
+    removeFile.addEventListener('click', function(e) {
+        e.stopPropagation();
+        fileInput.value = '';
+        uploadPlaceholder.classList.remove('d-none');
+        uploadPreview.classList.add('d-none');
+        submitBtn.disabled = true;
+    });
+
+    function handleFileSelect(file) {
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('File harus berformat JPG, PNG, atau PDF');
+            return;
+        }
+
+        // Validate file size (10MB)
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('Ukuran file maksimal 10MB');
+            return;
+        }
+
+        // Show preview
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        uploadPlaceholder.classList.add('d-none');
+        uploadPreview.classList.remove('d-none');
+        submitBtn.disabled = false;
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+});
+</script>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}

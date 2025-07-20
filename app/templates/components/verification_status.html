@@ -1,0 +1,194 @@
+<!-- Verification Status Component -->
+{% macro verification_status_card(user, show_details=True) %}
+{% if ProfileVerificationHelper %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="{{ ProfileVerificationHelper.get_verification_icon(user) }} me-2"></i>
+            Status Verifikasi Profil
+        </h6>
+        <span class="badge {{ ProfileVerificationHelper.get_verification_badge_class(user) }}">
+            {% set status_info = ProfileVerificationHelper.get_profile_status_info(user) %}
+            {{ status_info.message }}
+        </span>
+    </div>
+    <div class="card-body">
+        {% set status_info = ProfileVerificationHelper.get_profile_status_info(user) %}
+        
+        <!-- Progress Bar -->
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold">Kelengkapan Profil</span>
+                <span class="badge bg-{% if status_info.completion_percentage == 100 %}success{% elif status_info.completion_percentage >= 50 %}warning{% else %}danger{% endif %} fs-6">
+                    {{ status_info.completion_percentage }}%
+                </span>
+            </div>
+            <div class="progress" style="height: 12px;">
+                <div class="progress-bar 
+                    {% if status_info.completion_percentage == 100 %}bg-success
+                    {% elif status_info.completion_percentage >= 50 %}bg-warning
+                    {% else %}bg-danger{% endif %}" 
+                    role="progressbar" 
+                    style="width: {{ status_info.completion_percentage }}%"
+                    aria-valuenow="{{ status_info.completion_percentage }}" 
+                    aria-valuemin="0" 
+                    aria-valuemax="100">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Message -->
+        <div class="alert 
+            {% if status_info.status == 'verified' %}alert-success
+            {% elif status_info.status == 'pending_verification' %}alert-info
+            {% elif status_info.status == 'incomplete' %}alert-warning
+            {% else %}alert-danger{% endif %} mb-3">
+            <i class="{{ ProfileVerificationHelper.get_verification_icon(user) }} me-2"></i>
+            <strong>{{ status_info.message }}</strong>
+            <br>
+            <small>{{ ProfileVerificationHelper.get_next_action_message(user) }}</small>
+        </div>
+        
+        {% if show_details %}
+            <!-- Missing Fields (if any) -->
+            {% if status_info.status == 'incomplete' and status_info.missing_fields %}
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2">Field yang belum lengkap:</h6>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for field in status_info.missing_fields %}
+                            <span class="badge bg-light text-dark border">{{ field }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                {% if status_info.status in ['no_profile', 'incomplete'] %}
+                    <a href="{{ url_for('main.profil') }}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>
+                        {% if status_info.status == 'no_profile' %}Buat Profil{% else %}Lengkapi Profil{% endif %}
+                    </a>
+                {% elif status_info.status == 'pending_verification' %}
+                    <a href="{{ url_for('main.profil') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-eye me-2"></i>
+                        Lihat Profil
+                    </a>
+                {% elif status_info.status == 'verified' %}
+                    <a href="{{ url_for('competition.index') }}" class="btn btn-success">
+                        <i class="fas fa-trophy me-2"></i>
+                        Lihat Kompetisi
+                    </a>
+                    <a href="{{ url_for('main.profil') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>
+                        Edit Profil
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-user me-2"></i>
+            Status Verifikasi Profil
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Status verifikasi tidak dapat dimuat. Silakan refresh halaman.
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+<!-- Compact Verification Badge -->
+{% macro verification_badge(user, show_percentage=True) %}
+{% if ProfileVerificationHelper %}
+    {% set status_info = ProfileVerificationHelper.get_profile_status_info(user) %}
+    <span class="badge {{ ProfileVerificationHelper.get_verification_badge_class(user) }} d-inline-flex align-items-center">
+        <i class="{{ ProfileVerificationHelper.get_verification_icon(user) }} me-1"></i>
+        {% if show_percentage and status_info.completion_percentage < 100 %}
+            {{ status_info.completion_percentage }}%
+        {% else %}
+            {{ status_info.message }}
+        {% endif %}
+    </span>
+{% else %}
+    <span class="badge bg-secondary d-inline-flex align-items-center">
+        <i class="fas fa-user me-1"></i>
+        Status tidak tersedia
+    </span>
+{% endif %}
+{% endmacro %}
+
+<!-- Verification Status Alert -->
+{% macro verification_alert(user, dismissible=True) %}
+{% if ProfileVerificationHelper %}
+    {% set status_info = ProfileVerificationHelper.get_profile_status_info(user) %}
+    {% if not status_info.can_register %}
+<div class="alert 
+    {% if status_info.status == 'pending_verification' %}alert-info
+    {% elif status_info.status == 'incomplete' %}alert-warning
+    {% else %}alert-danger{% endif %}
+    {% if dismissible %}alert-dismissible fade show{% endif %}" role="alert">
+    <i class="{{ ProfileVerificationHelper.get_verification_icon(user) }} me-2"></i>
+    <strong>Perhatian:</strong> {{ status_info.message }}
+    <br>
+    <small>{{ ProfileVerificationHelper.get_next_action_message(user) }}</small>
+    
+    {% if status_info.status in ['no_profile', 'incomplete'] %}
+        <hr>
+        <div class="mb-0">
+            <a href="{{ url_for('main.profil') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-edit me-1"></i>
+                {% if status_info.status == 'no_profile' %}Buat Profil{% else %}Lengkapi Profil{% endif %}
+            </a>
+        </div>
+    {% endif %}
+    
+    {% if dismissible %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    {% endif %}
+</div>
+    {% endif %}
+{% endif %}
+{% endmacro %}
+
+<!-- Competition Registration Eligibility Check -->
+{% macro competition_eligibility_check(user, competition=None) %}
+{% if check_competition_eligibility and ProfileVerificationHelper %}
+    {% set can_register, reason = check_competition_eligibility(user, competition) %}
+    {% if not can_register %}
+<div class="alert alert-warning" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>Tidak dapat mendaftar:</strong> {{ reason }}
+    
+    {% set status_info = ProfileVerificationHelper.get_profile_status_info(user) %}
+    {% if status_info.status in ['no_profile', 'incomplete'] %}
+        <hr>
+        <div class="mb-0">
+            <a href="{{ url_for('main.profil') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-edit me-1"></i>
+                Lengkapi Profil
+            </a>
+        </div>
+    {% endif %}
+</div>
+    {% else %}
+<div class="alert alert-success" role="alert">
+    <i class="fas fa-check-circle me-2"></i>
+    <strong>Siap mendaftar!</strong> Anda memenuhi semua persyaratan untuk kompetisi ini.
+</div>
+    {% endif %}
+{% else %}
+<div class="alert alert-info" role="alert">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>Info:</strong> Status kelayakan tidak dapat diperiksa saat ini.
+</div>
+{% endif %}
+{% endmacro %}

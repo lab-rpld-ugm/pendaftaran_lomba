@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Kompetisi - Sistem Manajemen Kompetisi PDC 2025{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-2">
+                <i class="fas fa-trophy text-warning me-2"></i>
+                Daftar Kompetisi PDC 2025
+            </h2>
+            <p class="text-muted">Pilih kompetisi yang ingin Anda ikuti dan raih prestasi terbaikmu!</p>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">
+                        <i class="fas fa-filter me-2"></i>
+                        Filter Kompetisi
+                    </h6>
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="kategori" class="form-label">Kategori</label>
+                            <select class="form-select" id="kategori" name="kategori">
+                                <option value="">Semua Kategori</option>
+                                {% for category in available_categories %}
+                                    <option value="{{ category }}" 
+                                        {% if current_filters.kategori == category %}selected{% endif %}>
+                                        {{ 'Individu' if category == 'individual' else 'Tim' }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="jenis" class="form-label">Jenis Kompetisi</label>
+                            <select class="form-select" id="jenis" name="jenis">
+                                <option value="">Semua Jenis</option>
+                                {% for type in available_types %}
+                                    <option value="{{ type }}" 
+                                        {% if current_filters.jenis == type %}selected{% endif %}>
+                                        {% if type == 'academic' %}Akademik
+                                        {% elif type == 'creative' %}Kreatif
+                                        {% elif type == 'performance' %}Performa
+                                        {% elif type == 'basketball' %}Basket
+                                        {% elif type == 'esports' %}E-Sports
+                                        {% else %}{{ type.title() }}{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="kelas" class="form-label">Kelas</label>
+                            <select class="form-select" id="kelas" name="kelas">
+                                <option value="">Semua Kelas</option>
+                                {% for grade in available_grades %}
+                                    <option value="{{ grade }}" 
+                                        {% if current_filters.kelas == grade %}selected{% endif %}>
+                                        Kelas {{ grade }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-1"></i>
+                                Filter
+                            </button>
+                            <a href="{{ url_for('competition.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                Reset
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Competition Cards -->
+    <div class="row">
+        {% if competitions %}
+            {% for competition in competitions %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0 competition-card" data-competition-id="{{ competition.id }}">
+                        <!-- Card Header with Category Badge -->
+                        <div class="card-header bg-transparent border-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="badge 
+                                    {% if competition.kategori == 'individual' %}bg-primary
+                                    {% else %}bg-success{% endif %} mb-2">
+                                    <i class="fas 
+                                        {% if competition.kategori == 'individual' %}fa-user
+                                        {% else %}fa-users{% endif %} me-1"></i>
+                                    {{ competition.get_category_display() }}
+                                </span>
+                                <span class="badge 
+                                    {% if competition.jenis == 'academic' %}bg-info
+                                    {% elif competition.jenis == 'creative' %}bg-warning
+                                    {% elif competition.jenis == 'performance' %}bg-danger
+                                    {% else %}bg-dark{% endif %}">
+                                    {{ competition.get_competition_type_display() }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body">
+                            <h5 class="card-title text-dark mb-3">{{ competition.nama_kompetisi }}</h5>
+                            <p class="card-text text-muted small mb-3">{{ competition.deskripsi[:100] }}{% if competition.deskripsi|length > 100 %}...{% endif %}</p>
+                            
+                            <!-- Competition Info -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-users text-muted me-2"></i>
+                                        <small class="text-muted">
+                                            <span class="fw-bold text-primary participant-count">{{ competition.get_participant_count() }}</span> peserta
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-graduation-cap text-muted me-2"></i>
+                                        <small class="text-muted">Kelas {{ competition.min_kelas }}-{{ competition.max_kelas }}</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-calendar text-muted me-2"></i>
+                                        <small class="text-muted">{{ competition.tanggal_kompetisi.strftime('%d %b %Y') }}</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-clock text-muted me-2"></i>
+                                        <small class="text-muted">
+                                            {% if competition.get_registration_days_left() > 0 %}
+                                                {{ competition.get_registration_days_left() }} hari lagi
+                                            {% else %}
+                                                <span class="text-danger">Ditutup</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pricing Section -->
+                            <div class="pricing-section mb-3">
+                                {% if competition.is_early_bird_active() %}
+                                    <div class="alert alert-warning py-2 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="fas fa-fire text-warning me-1"></i>
+                                                <strong>Early Bird!</strong>
+                                            </div>
+                                            <div class="text-end">
+                                                <small class="text-muted">{{ competition.get_early_bird_days_left() }} hari lagi</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="h5 text-success mb-0">Rp {{ "{:,}".format(competition.harga_early_bird) }}</span>
+                                            <br>
+                                            <small class="text-muted text-decoration-line-through">Rp {{ "{:,}".format(competition.harga_reguler) }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-success">
+                                                Hemat Rp {{ "{:,}".format(competition.get_early_bird_savings()) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="h5 text-primary mb-0">Rp {{ "{:,}".format(competition.harga_reguler) }}</span>
+                                        {% if competition.get_early_bird_days_left() == 0 and competition.is_registration_open() %}
+                                            <small class="text-muted">Harga reguler</small>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="card-footer bg-transparent border-0 pt-0">
+                            <div class="d-grid">
+                                {% if competition.is_registration_open() %}
+                                    <a href="{{ url_for('competition.detail', id=competition.id) }}" 
+                                       class="btn btn-primary">
+                                        <i class="fas fa-eye me-1"></i>
+                                        Lihat Detail
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-secondary" disabled>
+                                        <i class="fas fa-lock me-1"></i>
+                                        Pendaftaran Ditutup
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Tidak ada kompetisi ditemukan</h4>
+                    <p class="text-muted">Coba ubah filter pencarian atau periksa kembali nanti.</p>
+                    <a href="{{ url_for('competition.index') }}" class="btn btn-primary">
+                        <i class="fas fa-refresh me-1"></i>
+                        Lihat Semua Kompetisi
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Custom CSS for competition cards -->
+<style>
+.competition-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.competition-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.pricing-section {
+    border-top: 1px solid #e9ecef;
+    padding-top: 1rem;
+}
+
+/* Animation for real-time participant count updates */
+.participant-count.updated {
+    animation: pulse-update 1s ease-in-out;
+}
+
+@keyframes pulse-update {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); color: #28a745; }
+    100% { transform: scale(1); }
+}
+
+@media (max-width: 768px) {
+    .competition-card {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
