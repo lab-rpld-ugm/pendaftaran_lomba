@@ -17,15 +17,51 @@
         <tbody>
             {% for competition in competitions %}
             <tr>
-                <td>{{ competition.nama_kompetisi }}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <i class="{{ competition.get_competition_icon() }} text-primary me-2" style="font-size: 1.25rem;"></i>
+                        {{ competition.nama_kompetisi }}
+                    </div>
+                </td>
                 <td>{{ competition.get_category_display() }}</td>
                 <td>{{ competition.get_competition_type_display() }}</td>
                 <td>{{ competition.tanggal_kompetisi.strftime('%d/%m/%Y %H:%M') }}</td>
                 <td>{{ competition.deadline_registrasi.strftime('%d/%m/%Y %H:%M') }}</td>
                 <td>
-                    <a href="{{ url_for('admin.edit_competition', id=competition.id) }}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-edit"></i> Edit
-                    </a>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('admin.edit_competition', id=competition.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><h6 class="dropdown-header">Format Excel</h6></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.export_participants', competition_id=competition.id, format='excel', status='all') }}">
+                                    <i class="fas fa-users"></i> Semua Peserta
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.export_participants', competition_id=competition.id, format='excel', status='approved') }}">
+                                    <i class="fas fa-check"></i> Peserta Disetujui
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.export_participants', competition_id=competition.id, format='excel', status='paid') }}">
+                                    <i class="fas fa-money-bill"></i> Peserta Lunas
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Format CSV</h6></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.export_participants', competition_id=competition.id, format='csv', status='all') }}">
+                                    <i class="fas fa-file-csv"></i> Semua Peserta (CSV)
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.export_participants', competition_id=competition.id, format='csv', status='approved') }}">
+                                    <i class="fas fa-file-csv"></i> Peserta Disetujui (CSV)
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.export_participants', competition_id=competition.id, format='csv', status='paid') }}">
+                                    <i class="fas fa-file-csv"></i> Peserta Lunas (CSV)
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </td>
             </tr>
             {% endfor %}

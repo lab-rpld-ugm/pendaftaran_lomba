@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, current_user
 from app.blueprints.auth import bp
 from app.forms.auth import RegistrationForm, LoginForm
@@ -18,6 +18,9 @@ def masuk():
         
         # Check if user exists and password is correct
         if user and user.check_password(form.password.data):
+            # Make session permanent for iframe compatibility
+            session.permanent = True
+            
             # Login user with remember me option
             login_user(user, remember=form.remember_me.data)
             
@@ -27,6 +30,61 @@ def masuk():
                 next_page = url_for('main.dashboard')
             
             flash(f'Selamat datang, {user.email}!', 'success')
+            
+            # Check if we're in an iframe by looking at referer header
+            referer = request.headers.get('Referer', '')
+            parent_domain = 'https://pdc.praditadirgantara.sch.id'
+            
+            # If request comes from the parent domain, we're likely in an iframe
+            if parent_domain in referer:
+                return f'''
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Login Success</title>
+                </head>
+                <body>
+                    <div style="text-align: center; padding: 50px;">
+                        <h3>Login berhasil!</h3>
+                        <p>Mengalihkan ke dashboard...</p>
+                    </div>
+                    <script type="text/javascript">
+                        // Try multiple redirect methods for iframe
+                        function redirectToParent() {{
+                            try {{
+                                // Method 1: Redirect parent window
+                                if (window.parent && window.parent !== window) {{
+                                    window.parent.location.href = "{next_page}";
+                                    return;
+                                }}
+                                
+                                // Method 2: Use top window
+                                if (window.top && window.top !== window) {{
+                                    window.top.location.href = "{next_page}";
+                                    return;
+                                }}
+                                
+                                // Method 3: Regular redirect
+                                window.location.href = "{next_page}";
+                            }} catch (e) {{
+                                // Fallback: Regular redirect
+                                window.location.href = "{next_page}";
+                            }}
+                        }}
+                        
+                        // Execute redirect immediately
+                        redirectToParent();
+                        
+                        // Fallback after 2 seconds
+                        setTimeout(function() {{
+                            window.location.href = "{next_page}";
+                        }}, 2000);
+                    </script>
+                </body>
+                </html>
+                '''
+            
+            # Regular redirect for non-iframe requests
             return redirect(next_page)
         else:
             flash('Email atau kata sandi tidak valid.', 'danger')
@@ -56,7 +114,28 @@ def daftar():
             db.session.commit()
             
             flash('Registrasi berhasil! Silakan masuk dengan akun Anda.', 'success')
-            return redirect(url_for('auth.masuk'))
+            
+            # Check if we're in an iframe
+            is_iframe = request.headers.get('Sec-Fetch-Dest') == 'iframe' or \
+                       request.headers.get('X-Requested-With') == 'iframe' or \
+                       'iframe' in request.headers.get('Referer', '').lower()
+            
+            next_page = url_for('auth.masuk')
+            
+            # For iframe, use JavaScript redirect to break out of iframe context
+            if is_iframe:
+                return f'''
+                <script type="text/javascript">
+                    if (window.parent !== window) {{
+                        window.parent.location.href = "{next_page}";
+                    }} else {{
+                        window.location.href = "{next_page}";
+                    }}
+                </script>
+                <p>Redirecting to login...</p>
+                '''
+            
+            return redirect(next_page)
             
         except Exception as e:
             db.session.rollback()

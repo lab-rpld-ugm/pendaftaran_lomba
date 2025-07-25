@@ -361,17 +361,16 @@ def export_dashboard():
 @admin_required
 def export_participants(competition_id):
     """Export participants for a specific competition"""
-    import csv
-    import io
     from flask import make_response
     from app.models.competition import Competition
     from app.models.registration import Registration
+    from app.models.payment import Payment
     
     competition = Competition.query.get_or_404(competition_id)
     
     # Get filter parameters
     status_filter = request.args.get('status', 'all')  # all, approved, paid
-    format_type = request.args.get('format', 'csv')  # csv, excel
+    format_type = request.args.get('format', 'excel')  # csv, excel
     
     # Build query based on filters
     query = Registration.query.filter_by(competition_id=competition_id)
@@ -383,20 +382,15 @@ def export_participants(competition_id):
     
     registrations = query.all()
     
-    # Create CSV content
-    output = io.StringIO()
-    writer = csv.writer(output)
-    
-    # Write header
+    # Prepare data
     headers = [
         'No', 'Nama Lengkap', 'Email', 'Sekolah', 'Kelas', 'NISN', 
         'WhatsApp', 'Instagram', 'Twitter', 'Tipe Registrasi', 
         'Status Registrasi', 'Tanggal Registrasi', 'Harga Terkunci',
         'Status Pembayaran', 'Tanggal Pembayaran', 'Nama Tim', 'Posisi Tim'
     ]
-    writer.writerow(headers)
     
-    # Write data
+    data = []
     for i, registration in enumerate(registrations, 1):
         user = registration.user
         profile = user.profile if user.profile else None
@@ -432,20 +426,85 @@ def export_participants(competition_id):
             team_name,
             team_position
         ]
-        writer.writerow(row)
-    
-    # Create response
-    output.seek(0)
+        data.append(row)
     
     # Generate filename
     status_suffix = f"_{status_filter}" if status_filter != 'all' else ""
-    filename = f"peserta_{competition.nama_kompetisi.replace(' ', '_')}{status_suffix}.csv"
+    safe_competition_name = competition.nama_kompetisi.replace(' ', '_')
     
-    response = make_response(output.getvalue())
-    response.headers['Content-Type'] = 'text/csv; charset=utf-8'
-    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+    if format_type == 'excel':
+        try:
+            import openpyxl
+            from openpyxl.utils import get_column_letter
+            from openpyxl.styles import Font, PatternFill
+            import io
+            
+            # Create workbook and worksheet
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = f"Peserta {competition.nama_kompetisi}"
+            
+            # Add headers
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True)
+                cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+            
+            # Add data
+            for row_idx, row_data in enumerate(data, 2):
+                for col_idx, value in enumerate(row_data, 1):
+                    ws.cell(row=row_idx, column=col_idx, value=value)
+            
+            # Auto-adjust column widths
+            for column in ws.columns:
+                max_length = 0
+                column_letter = get_column_letter(column[0].column)
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)
+                ws.column_dimensions[column_letter].width = adjusted_width
+            
+            # Save to bytes
+            output = io.BytesIO()
+            wb.save(output)
+            output.seek(0)
+            
+            filename = f"peserta_{safe_competition_name}{status_suffix}.xlsx"
+            
+            response = make_response(output.getvalue())
+            response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+            
+            return response
+            
+        except ImportError:
+            # Fallback to CSV if openpyxl is not available
+            format_type = 'csv'
     
-    return response
+    # CSV export (fallback or if explicitly requested)
+    if format_type == 'csv':
+        import csv
+        import io
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write headers and data
+        writer.writerow(headers)
+        writer.writerows(data)
+        
+        output.seek(0)
+        filename = f"peserta_{safe_competition_name}{status_suffix}.csv"
+        
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
 
 
 @bp.route('/export/revenue')

@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
@@ -18,6 +18,65 @@ def create_app(config_class=Config):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    
+    # Configure app for iframe usage
+    @app.after_request
+    def after_request(response):
+        # Allow iframe embedding from specific domains
+        allowed_origins = [
+            'https://pdc.praditadirgantara.sch.id',
+            'http://localhost:3000',  # For local testing
+            'http://127.0.0.1:3000'   # For local testing
+        ]
+        
+        origin = request.headers.get('Origin')
+        referer = request.headers.get('Referer')
+        
+        # Check if request is from allowed origin
+        if origin in allowed_origins or any(allowed in (referer or '') for allowed in allowed_origins):
+            response.headers['Access-Control-Allow-Origin'] = origin or 'https://pdc.praditadirgantara.sch.id'
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+        
+        # Remove X-Frame-Options to allow iframe embedding
+        response.headers.pop('X-Frame-Options', None)
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        
+        # Set SameSite cookie attributes for iframe support
+        if 'Set-Cookie' in response.headers:
+            cookies = response.headers.getlist('Set-Cookie')
+            response.headers.clear()
+            for cookie in cookies:
+                # Parse cookie to modify attributes
+                cookie_parts = cookie.split(';')
+                cookie_base = cookie_parts[0]
+                
+                # Remove existing SameSite and Secure attributes
+                filtered_parts = [cookie_base]
+                for part in cookie_parts[1:]:
+                    part = part.strip()
+                    if not part.lower().startswith('samesite') and not part.lower().startswith('secure'):
+                        filtered_parts.append(part)
+                
+                # Always add SameSite=None for iframe compatibility
+                filtered_parts.append('SameSite=None')
+                
+                # Add Secure flag - required for SameSite=None and HTTPS
+                filtered_parts.append('Secure')
+                
+                # Reconstruct cookie
+                new_cookie = '; '.join(filtered_parts)
+                response.headers.add('Set-Cookie', new_cookie)
+        
+        return response
+    
+    # Custom CSRF token generation for iframe support
+    from flask_wtf.csrf import generate_csrf
+    
+    @app.context_processor
+    def inject_csrf_token():
+        return dict(csrf_token=generate_csrf)
     
     # Configure Flask-Login
     login_manager.login_view = 'auth.masuk'
@@ -66,6 +125,10 @@ def create_app(config_class=Config):
             'ProfileVerificationHelper': ProfileVerificationHelper,
             'check_competition_eligibility': check_competition_eligibility
         }
+
+    @app.context_processor
+    def inject_utility_functions():
+        return dict(min=min)
     
     # Create database tables
     with app.app_context():

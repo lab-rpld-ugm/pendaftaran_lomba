@@ -8,14 +8,15 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2>Dashboard</h2>
-                <p class="text-muted mb-0">
-                    Selamat datang, 
+                <h2 class="hero-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">Dashboard</h2>
+                <p class="text-muted mb-0" style="font-size: 1.1rem;">
+                    Hai, <span style="color: var(--pdc-gold); font-weight: 600;">
                     {% if current_user.profile and current_user.profile.nama_lengkap %}
                         {{ current_user.profile.nama_lengkap }}
                     {% else %}
                         {{ current_user.email.split('@')[0] }}
-                    {% endif %}!
+                    {% endif %}</span>! 
+                    <span style="color: var(--text-muted);">Selamat datang di PDC 2025</span>
                 </p>
             </div>
             <div>
@@ -169,7 +170,12 @@
                                     <div class="card-body p-3">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div class="flex-grow-1">
-                                                <h6 class="mb-1">{{ registration.competition.nama_kompetisi }}</h6>
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="icon-circle bg-primary bg-opacity-10 me-2" style="width: 35px; height: 35px;">
+                                                        <i class="{{ registration.competition.get_competition_icon() }} text-primary" style="font-size: 1rem;"></i>
+                                                    </div>
+                                                    <h6 class="mb-0">{{ registration.competition.nama_kompetisi }}</h6>
+                                                </div>
                                                 <p class="text-muted mb-2">
                                                     <i class="fas fa-calendar me-1"></i>
                                                     {{ registration.competition.tanggal_kompetisi.strftime('%d %B %Y') }}
@@ -193,7 +199,7 @@
                                                 <div class="mb-2">
                                                     <strong class="text-success">Rp {{ "{:,}".format(registration.harga_terkunci) }}</strong>
                                                 </div>
-                                                {% if registration.payment %}
+                                                {% if registration.payment and registration.payment.id %}
                                                     <div class="dropdown">
                                                         <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                                             Aksi
@@ -205,7 +211,7 @@
                                                                     Lihat Pembayaran
                                                                 </a>
                                                             </li>
-                                                            {% if not registration.payment.bukti_pembayaran and registration.payment.can_be_modified() %}
+                                                            {% if registration.payment and not registration.payment.bukti_pembayaran and registration.payment.can_be_modified() %}
                                                                 <li>
                                                                     <a class="dropdown-item" href="{{ url_for('payment.upload_proof', id=registration.payment.id) }}">
                                                                         <i class="fas fa-upload me-1"></i>
@@ -232,16 +238,16 @@
                                                     <div class="col-md-6">
                                                         <small class="text-muted">Status Pembayaran:</small>
                                                         <span class="badge 
-                                                            {% if registration.payment.status == 'approved' %}bg-success
-                                                            {% elif registration.payment.status == 'rejected' %}bg-danger
+                                                            {% if registration.payment and registration.payment.status == 'approved' %}bg-success
+                                                            {% elif registration.payment and registration.payment.status == 'rejected' %}bg-danger
                                                             {% else %}bg-warning text-dark{% endif %} ms-1">
-                                                            {{ registration.payment.get_status_display() }}
+                                                            {% if registration.payment %}{{ registration.payment.get_status_display() }}{% else %}No Payment{% endif %}
                                                         </span>
                                                     </div>
                                                     <div class="col-md-6 text-md-end">
-                                                        {% if registration.payment.status == 'pending' %}
+                                                        {% if registration.payment and registration.payment.status == 'pending' %}
                                                             <small class="text-muted">
-                                                                {% if not registration.payment.bukti_pembayaran %}
+                                                                {% if registration.payment and not registration.payment.bukti_pembayaran %}
                                                                     <i class="fas fa-exclamation-triangle text-warning me-1"></i>
                                                                     Belum upload bukti
                                                                 {% else %}
@@ -296,10 +302,12 @@
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div class="flex-grow-1">
                                                 <h6 class="mb-1">{{ team.nama_tim }}</h6>
-                                                <p class="text-muted mb-2">
-                                                    <i class="fas fa-trophy me-1"></i>
-                                                    {{ team.competition.nama_kompetisi }}
-                                                </p>
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="icon-circle bg-primary bg-opacity-10 me-2" style="width: 30px; height: 30px;">
+                                                        <i class="{{ team.competition.get_competition_icon() }} text-primary" style="font-size: 0.875rem;"></i>
+                                                    </div>
+                                                    <p class="text-muted mb-0">{{ team.competition.nama_kompetisi }}</p>
+                                                </div>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <span class="badge 
                                                         {% if team.is_complete() %}bg-success
@@ -459,40 +467,44 @@
         </div>
         
         <!-- Statistics -->
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    Statistik
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-6">
-                        <div class="border-end">
-                            <h4 class="text-primary mb-1">{{ user_registrations|length }}</h4>
-                            <small class="text-muted">Kompetisi Terdaftar</small>
-                        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-6">
+                <div class="dashboard-card">
+                    <div class="dashboard-icon">
+                        <i class="fas fa-trophy"></i>
                     </div>
-                    <div class="col-6">
-                        <h4 class="text-success mb-1">{{ user_registrations|selectattr('status', 'equalto', 'approved')|list|length }}</h4>
-                        <small class="text-muted">Pembayaran Disetujui</small>
-                    </div>
+                    <div class="dashboard-number">{{ user_registrations|length }}</div>
+                    <div class="dashboard-label">Kompetisi Terdaftar</div>
                 </div>
-                
-                <hr class="my-3">
-                
-                <div class="row text-center">
-                    <div class="col-6">
-                        <div class="border-end">
-                            <h4 class="text-info mb-1">{{ user_teams|length }}</h4>
-                            <small class="text-muted">Tim Dikelola</small>
-                        </div>
+            </div>
+            <div class="col-6">
+                <div class="dashboard-card">
+                    <div class="dashboard-icon">
+                        <i class="fas fa-check-circle"></i>
                     </div>
-                    <div class="col-6">
-                        <h4 class="text-warning mb-1">{{ user_registrations|selectattr('status', 'equalto', 'pending')|list|length }}</h4>
-                        <small class="text-muted">Menunggu Verifikasi</small>
+                    <div class="dashboard-number">{{ user_registrations|selectattr('status', 'equalto', 'approved')|list|length }}</div>
+                    <div class="dashboard-label">Pembayaran Disetujui</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row g-3">
+            <div class="col-6">
+                <div class="dashboard-card">
+                    <div class="dashboard-icon">
+                        <i class="fas fa-users"></i>
                     </div>
+                    <div class="dashboard-number">{{ user_teams|length }}</div>
+                    <div class="dashboard-label">Tim Dikelola</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="dashboard-card">
+                    <div class="dashboard-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="dashboard-number">{{ user_registrations|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+                    <div class="dashboard-label">Menunggu Verifikasi</div>
                 </div>
             </div>
         </div>

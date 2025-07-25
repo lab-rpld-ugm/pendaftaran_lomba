@@ -91,9 +91,15 @@ def profil():
             # Save to database
             db.session.commit()
             
-            flash(f'Profil berhasil disimpan! Kelengkapan: {completion_percentage}%', 'success')
+            flash(f'Profil berhasil disimpan! Kelengkapan: {completion_percentage}% ', 'success')
             
             # Redirect to prevent form resubmission
+            if 'iframe' in request.args:
+                return '''
+                    <script>
+                        window.top.location.href = "{url_for('main.profil')}";
+                    </script>
+                '''
             return redirect(url_for('main.profil'))
             
         except Exception as e:

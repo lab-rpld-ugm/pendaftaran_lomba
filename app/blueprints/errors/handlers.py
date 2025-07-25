@@ -1,4 +1,5 @@
-from flask import render_template
+from flask import render_template, flash, redirect, url_for
+from flask_wtf.csrf import CSRFError
 from app import db
 from app.blueprints.errors import bp
 
@@ -20,3 +21,10 @@ def internal_error(error):
 def forbidden_error(error):
     """Handle 403 errors"""
     return render_template('errors/403.html'), 403
+
+
+@bp.app_errorhandler(CSRFError)
+def handle_csrf_error(e):
+    """Handle CSRF errors"""
+    flash('Sesi keamanan telah berakhir. Silakan coba lagi.', 'warning')
+    return redirect(url_for('auth.masuk'))

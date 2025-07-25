@@ -245,7 +245,7 @@ def register(id):
             db.session.commit()
             
             flash(f'Pendaftaran berhasil! Harga terkunci: Rp {locked_price:,}. Silakan upload bukti pembayaran dalam 24 jam.', 'success')
-            return redirect(url_for('main.dashboard'))
+            return redirect(url_for('payment.upload_payment', payment_id=payment.id))
             
         except Exception as e:
             db.session.rollback()

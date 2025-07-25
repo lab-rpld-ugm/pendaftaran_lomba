@@ -100,10 +100,10 @@
                                     {{ competition.get_category_display() }}
                                 </span>
                                 <span class="badge 
-                                    {% if competition.jenis == 'academic' %}bg-info
-                                    {% elif competition.jenis == 'creative' %}bg-warning
-                                    {% elif competition.jenis == 'performance' %}bg-danger
-                                    {% else %}bg-dark{% endif %}">
+                                    {% if competition.jenis == 'academic' %}bg-info-subtle text-info-emphasis
+                                    {% elif competition.jenis == 'creative' %}bg-warning-subtle text-warning-emphasis
+                                    {% elif competition.jenis == 'performance' %}bg-danger-subtle text-danger-emphasis
+                                    {% else %}bg-dark-subtle text-dark-emphasis{% endif %}">
                                     {{ competition.get_competition_type_display() }}
                                 </span>
                             </div>
@@ -111,7 +111,12 @@
 
                         <!-- Card Body -->
                         <div class="card-body">
-                            <h5 class="card-title text-dark mb-3">{{ competition.nama_kompetisi }}</h5>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="icon-circle bg-primary bg-opacity-10 me-3">
+                                    <i class="{{ competition.get_competition_icon() }} text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <h5 class="card-title mb-0">{{ competition.nama_kompetisi }}</h5>
+                            </div>
                             <p class="card-text text-muted small mb-3">{{ competition.deskripsi[:100] }}{% if competition.deskripsi|length > 100 %}...{% endif %}</p>
                             
                             <!-- Competition Info -->
@@ -225,6 +230,16 @@
 
 <!-- Custom CSS for competition cards -->
 <style>
+.icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
 .competition-card {
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }

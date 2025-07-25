@@ -14,7 +14,7 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">PDC 2025</a>
             
@@ -39,7 +39,7 @@
                                 <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-cog"></i> Admin
                                 </a>
-                                <ul class="dropdown-menu">
+                                <ul class="dropdown-menu" style="z-index: 1050;">
                                     <li><a class="dropdown-item" href="{{ url_for('admin.verifikasi') }}">
                                         <i class="fas fa-user-check"></i> Verifikasi Pengguna
                                     </a></li>

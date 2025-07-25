@@ -178,6 +178,112 @@ class Competition(db.Model):
     def get_category_display(self):
         """Get human-readable category"""
         return 'Individu' if self.kategori == 'individual' else 'Tim'
+    
+    def get_competition_icon(self):
+        """Get FontAwesome icon based on competition type and name"""
+        # First check by competition type/jenis
+        type_icons = {
+            'academic': 'fas fa-graduation-cap',
+            'creative': 'fas fa-palette',
+            'performance': 'fas fa-music',
+            'basketball': 'fas fa-basketball-ball',
+            'esports': 'fas fa-gamepad'
+        }
+        
+        # Check by jenis first
+        if self.jenis in type_icons:
+            return type_icons[self.jenis]
+        
+        # If not found, check by name keywords (case insensitive)
+        name_lower = self.nama_kompetisi.lower()
+        
+        # Academic/Educational
+        if any(keyword in name_lower for keyword in ['matematika', 'math', 'fisika', 'kimia', 'biologi', 'ipa', 'sains', 'science']):
+            return 'fas fa-calculator'
+        elif any(keyword in name_lower for keyword in ['bahasa', 'english', 'essay', 'menulis', 'writing']):
+            return 'fas fa-pen-nib'
+        elif any(keyword in name_lower for keyword in ['sejarah', 'history', 'budaya', 'culture']):
+            return 'fas fa-landmark'
+        elif any(keyword in name_lower for keyword in ['geografi', 'geography', 'bumi', 'earth']):
+            return 'fas fa-globe'
+        elif any(keyword in name_lower for keyword in ['ekonomi', 'bisnis', 'business', 'entrepreneurship']):
+            return 'fas fa-chart-line'
+        
+        # Technology/Programming
+        elif any(keyword in name_lower for keyword in ['programming', 'coding', 'web', 'app', 'software', 'teknologi', 'it', 'komputer']):
+            return 'fas fa-code'
+        elif any(keyword in name_lower for keyword in ['robot', 'robotik', 'iot', 'arduino', 'microcontroller']):
+            return 'fas fa-robot'
+        elif any(keyword in name_lower for keyword in ['ai', 'artificial intelligence', 'machine learning', 'ml', 'data science']):
+            return 'fas fa-brain'
+        elif any(keyword in name_lower for keyword in ['cyber', 'security', 'hacking', 'ctf']):
+            return 'fas fa-shield-alt'
+        
+        # Sports
+        elif any(keyword in name_lower for keyword in ['basket', 'basketball']):
+            return 'fas fa-basketball-ball'
+        elif any(keyword in name_lower for keyword in ['futsal', 'sepak bola', 'football', 'soccer']):
+            return 'fas fa-futbol'
+        elif any(keyword in name_lower for keyword in ['voli', 'volleyball']):
+            return 'fas fa-volleyball-ball'
+        elif any(keyword in name_lower for keyword in ['badminton', 'bulutangkis']):
+            return 'fas fa-shuttlecock'
+        elif any(keyword in name_lower for keyword in ['atletik', 'lari', 'running', 'track']):
+            return 'fas fa-running'
+        elif any(keyword in name_lower for keyword in ['renang', 'swimming']):
+            return 'fas fa-swimmer'
+        
+        # Arts & Creative
+        elif any(keyword in name_lower for keyword in ['seni', 'lukis', 'painting', 'drawing', 'gambar']):
+            return 'fas fa-palette'
+        elif any(keyword in name_lower for keyword in ['musik', 'music', 'band', 'vocal', 'choir', 'paduan suara']):
+            return 'fas fa-music'
+        elif any(keyword in name_lower for keyword in ['dance', 'tari', 'koreografi']):
+            return 'fas fa-running'  # closest to dancing
+        elif any(keyword in name_lower for keyword in ['teater', 'drama', 'acting', 'monolog']):
+            return 'fas fa-theater-masks'
+        elif any(keyword in name_lower for keyword in ['fotografi', 'photography', 'photo']):
+            return 'fas fa-camera'
+        elif any(keyword in name_lower for keyword in ['video', 'film', 'sinematografi']):
+            return 'fas fa-video'
+        elif any(keyword in name_lower for keyword in ['design', 'desain', 'graphic']):
+            return 'fas fa-drafting-compass'
+        
+        # Gaming/Esports
+        elif any(keyword in name_lower for keyword in ['esports', 'gaming', 'game', 'mobile legends', 'ml', 'pubg', 'valorant', 'dota', 'lol']):
+            return 'fas fa-gamepad'
+        elif any(keyword in name_lower for keyword in ['chess', 'catur']):
+            return 'fas fa-chess'
+        
+        # Debate & Speaking
+        elif any(keyword in name_lower for keyword in ['debate', 'debat', 'public speaking', 'orasi', 'pidato']):
+            return 'fas fa-microphone'
+        elif any(keyword in name_lower for keyword in ['storytelling', 'bercerita', 'mendongeng']):
+            return 'fas fa-book-open'
+        
+        # Leadership & Organization
+        elif any(keyword in name_lower for keyword in ['leadership', 'kepemimpinan', 'mcc', 'student council']):
+            return 'fas fa-users-cog'
+        elif any(keyword in name_lower for keyword in ['organisasi', 'organization', 'management']):
+            return 'fas fa-sitemap'
+        
+        # Environmental & Social
+        elif any(keyword in name_lower for keyword in ['lingkungan', 'environment', 'green', 'sustainability']):
+            return 'fas fa-leaf'
+        elif any(keyword in name_lower for keyword in ['sosial', 'social', 'community', 'volunteer']):
+            return 'fas fa-hands-helping'
+        
+        # Innovation & Research
+        elif any(keyword in name_lower for keyword in ['inovasi', 'innovation', 'research', 'penelitian', 'karya ilmiah']):
+            return 'fas fa-lightbulb'
+        elif any(keyword in name_lower for keyword in ['project', 'proyek', 'prototype']):
+            return 'fas fa-cogs'
+        
+        # Default fallback based on category
+        if self.kategori == 'team':
+            return 'fas fa-users'
+        else:
+            return 'fas fa-trophy'
 
 
 class CompetitionCategory(db.Model):
@@ -247,12 +353,20 @@ class CompetitionCategory(db.Model):
         """Create default competition categories"""
         categories = [
             {
+                'nama_kategori': 'Basket',
+                'deskripsi': 'Kompetisi basket tim',
+                'tipe_kompetisi': 'team',
+                'min_team_size': 5,
+                'max_team_size': 8,
+                'display_order': 1
+            },
+            {
                 'nama_kategori': 'Math Olympiad',
                 'deskripsi': 'Olimpiade Matematika untuk siswa SMP',
                 'tipe_kompetisi': 'individual',
                 'requires_file_upload': True,
                 'allowed_file_types': 'pdf,doc,docx',
-                'display_order': 1
+                'display_order': 2
             },
             {
                 'nama_kategori': 'Science Olympiad',
@@ -260,7 +374,7 @@ class CompetitionCategory(db.Model):
                 'tipe_kompetisi': 'individual',
                 'requires_file_upload': True,
                 'allowed_file_types': 'pdf,doc,docx',
-                'display_order': 2
+                'display_order': 3
             },
             {
                 'nama_kategori': 'Logic Olympiad',
@@ -268,35 +382,28 @@ class CompetitionCategory(db.Model):
                 'tipe_kompetisi': 'individual',
                 'requires_file_upload': True,
                 'allowed_file_types': 'pdf,doc,docx',
-                'display_order': 3
-            },
-            {
-                'nama_kategori': 'Informatics Olympiad',
-                'deskripsi': 'Olimpiade Informatika untuk siswa SMP',
-                'tipe_kompetisi': 'individual',
-                'requires_file_upload': True,
-                'allowed_file_types': 'pdf,doc,docx,py,cpp,java',
                 'display_order': 4
-            },
-            {
-                'nama_kategori': 'Digital Poster',
-                'deskripsi': 'Kompetisi poster digital kreatif',
-                'tipe_kompetisi': 'individual',
-                'requires_google_drive': True,
-                'display_order': 5
             },
             {
                 'nama_kategori': 'Scientific Writing',
                 'deskripsi': 'Kompetisi karya tulis ilmiah',
                 'tipe_kompetisi': 'individual',
                 'requires_google_drive': True,
-                'display_order': 6
+                'display_order': 5
             },
             {
                 'nama_kategori': 'Speech',
                 'deskripsi': 'Kompetisi pidato bahasa Inggris',
                 'tipe_kompetisi': 'individual',
                 'requires_google_drive': True,
+                'display_order': 6
+            },
+            {
+                'nama_kategori': 'E-Sports',
+                'deskripsi': 'Kompetisi e-sports tim',
+                'tipe_kompetisi': 'team',
+                'min_team_size': 5,
+                'max_team_size': 7,
                 'display_order': 7
             },
             {
@@ -307,20 +414,11 @@ class CompetitionCategory(db.Model):
                 'display_order': 8
             },
             {
-                'nama_kategori': 'Basketball',
-                'deskripsi': 'Kompetisi basket tim',
-                'tipe_kompetisi': 'team',
-                'min_team_size': 5,
-                'max_team_size': 8,
+                'nama_kategori': 'Digital Poster',
+                'deskripsi': 'Kompetisi poster digital kreatif',
+                'tipe_kompetisi': 'individual',
+                'requires_google_drive': True,
                 'display_order': 9
-            },
-            {
-                'nama_kategori': 'E-Sports',
-                'deskripsi': 'Kompetisi e-sports tim',
-                'tipe_kompetisi': 'team',
-                'min_team_size': 5,
-                'max_team_size': 7,
-                'display_order': 10
             }
         ]
         
